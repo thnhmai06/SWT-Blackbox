@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  # Workload 1 per problem: paper suite, boundary, mutant-matrix, property and exhaustive tests.
+  test:
+    name: Tests (${{ matrix.problem }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        problem: [Atm, Quadratic]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build tests/SwtBlackbox.${{ matrix.problem }}.Tests --configuration Release -warnaserror
+
+      - name: Test
+        run: >-
+          dotnet test --project tests/SwtBlackbox.${{ matrix.problem }}.Tests
+          --configuration Release --no-build
+          --report-xunit-trx --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-${{ matrix.problem }}
+          path: TestResults/*.trx
+          if-no-files-found: warn
+
+  # Workload 2 per problem: Stryker.NET mutation testing; fails below the break threshold in stryker-config.json.
+  mutation:
+    name: Mutation (${{ matrix.problem }})
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        problem: [Atm, Quadratic]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Run Stryker
+        working-directory: tests/SwtBlackbox.${{ matrix.problem }}.Tests
+        run: dotnet stryker
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mutation-report-${{ matrix.problem }}
+          path: tests/SwtBlackbox.${{ matrix.problem }}.Tests/StrykerOutput/**/reports/
+          if-no-files-found: warn

@@ -1,11 +1,10 @@
 using System.Numerics;
-using BVA_Boundry.Quadratic;
 
-namespace BVA_Boundry.Tests.Quadratic;
+namespace SwtBlackbox.Quadratic.Tests;
 
 /// <summary>
-/// Exhaustive sweep of every (a, b, c) in [-100, 100]³ (8,120,601 triples): totality, class counts,
-/// a BigInteger re-statement of the spec, and the §5.8 discriminant reachability argument.
+///     Exhaustive sweep of every (a, b, c) in [-100, 100]³ (8,120,601 triples): totality, class counts,
+///     a BigInteger re-statement of the spec, and the §5.8 discriminant reachability argument.
 /// </summary>
 public class QuadraticExhaustiveTests
 {
@@ -50,8 +49,8 @@ public class QuadraticExhaustiveTests
             (int A, int B, int C)? localMod4 = null;
             var localTotal = 0L;
 
-            for (int b = Min; b <= Max; b++)
-            for (int c = Min; c <= Max; c++)
+            for (var b = Min; b <= Max; b++)
+            for (var c = Min; c <= Max; c++)
             {
                 var actual = QuadraticSolver.Solve(a, b, c);
                 if (actual != Oracle(a, b, c) && localMismatch is null)
@@ -95,8 +94,8 @@ public class QuadraticExhaustiveTests
         Parallel.For(Min, Max + 1, a =>
         {
             var local = new bool[9];
-            for (int b = Min; b <= Max; b++)
-            for (int c = Min; c <= Max; c++)
+            for (var b = Min; b <= Max; b++)
+            for (var c = Min; c <= Max; c++)
             {
                 var d = QuadraticSolver.Discriminant(a, b, c);
                 if (d is >= -4 and <= 4)

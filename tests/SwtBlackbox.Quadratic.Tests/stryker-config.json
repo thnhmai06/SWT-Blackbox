@@ -1,0 +1,16 @@
+{
+  "stryker-config": {
+    "project": "SwtBlackbox.Quadratic.csproj",
+    "test-runner": "mtp",
+    "reporters": [
+      "progress",
+      "html",
+      "json"
+    ],
+    "thresholds": {
+      "high": 100,
+      "low": 90,
+      "break": 90
+    }
+  }
+}

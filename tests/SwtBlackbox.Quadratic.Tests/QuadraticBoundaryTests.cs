@@ -1,10 +1,9 @@
-using BVA_Boundry.Quadratic;
-
-namespace BVA_Boundry.Tests.Quadratic;
+namespace SwtBlackbox.Quadratic.Tests;
 
 public class QuadraticBoundaryTests
 {
-    public static IEnumerable<TheoryDataRow<int, int, int, string>> CoefficientOutOfRangeThrows => [
+    public static IEnumerable<TheoryDataRow<int, int, int, string>> CoefficientOutOfRangeThrows =>
+    [
         new TheoryDataRow<int, int, int, string>(-101, 1, 1, "a")
             .WithTestDisplayName("SUP-QE-01: a = -101 throws ArgumentOutOfRangeException"),
         new TheoryDataRow<int, int, int, string>(101, 1, 1, "a")
@@ -16,10 +15,11 @@ public class QuadraticBoundaryTests
         new TheoryDataRow<int, int, int, string>(1, 1, -101, "c")
             .WithTestDisplayName("SUP-QE-05: c = -101 throws ArgumentOutOfRangeException"),
         new TheoryDataRow<int, int, int, string>(1, 1, 101, "c")
-            .WithTestDisplayName("SUP-QE-06: c = 101 throws ArgumentOutOfRangeException"),
+            .WithTestDisplayName("SUP-QE-06: c = 101 throws ArgumentOutOfRangeException")
     ];
 
-    public static IEnumerable<TheoryDataRow<int, int, int, QuadraticResult>> CoefficientBoundaryDoesNotThrow => [
+    public static IEnumerable<TheoryDataRow<int, int, int, QuadraticResult>> CoefficientBoundaryDoesNotThrow =>
+    [
         new TheoryDataRow<int, int, int, QuadraticResult>(-100, 1, 1, QuadraticResult.TwoDistinctRealRoots)
             .WithTestDisplayName("SUP-QE-07: a=-100 allowed (TwoDistinctRealRoots)"),
         new TheoryDataRow<int, int, int, QuadraticResult>(100, 1, 1, QuadraticResult.NoRealRoots)
@@ -37,10 +37,11 @@ public class QuadraticBoundaryTests
         new TheoryDataRow<int, int, int, QuadraticResult>(0, 0, -100, QuadraticResult.NoSolution)
             .WithTestDisplayName("SUP-QE-14: a=0,b=0,c=-100 allowed (NoSolution)"),
         new TheoryDataRow<int, int, int, QuadraticResult>(0, 0, 100, QuadraticResult.NoSolution)
-            .WithTestDisplayName("SUP-QE-15: a=0,b=0,c=100 allowed (NoSolution)"),
+            .WithTestDisplayName("SUP-QE-15: a=0,b=0,c=100 allowed (NoSolution)")
     ];
 
-    public static IEnumerable<TheoryDataRow<int, int, int, long>> DiscriminantReachability => [
+    public static IEnumerable<TheoryDataRow<int, int, int, long>> DiscriminantReachability =>
+    [
         new TheoryDataRow<int, int, int, long>(1, 1, 1, -3)
             .WithTestDisplayName("SUP-QE-16: discriminant (1,1,1) -> -3"),
         new TheoryDataRow<int, int, int, long>(1, 0, 1, -4)
@@ -54,10 +55,11 @@ public class QuadraticBoundaryTests
         new TheoryDataRow<int, int, int, long>(100, 0, 100, -40000)
             .WithTestDisplayName("SUP-QE-21: discriminant (100,0,100) -> -40000"),
         new TheoryDataRow<int, int, int, long>(-100, 100, 100, 50000)
-            .WithTestDisplayName("SUP-QE-22: discriminant (-100,100,100) -> 50000"),
+            .WithTestDisplayName("SUP-QE-22: discriminant (-100,100,100) -> 50000")
     ];
 
-    public static IEnumerable<TheoryDataRow<int, int, int, QuadraticResult>> EdgeCases => [
+    public static IEnumerable<TheoryDataRow<int, int, int, QuadraticResult>> EdgeCases =>
+    [
         new TheoryDataRow<int, int, int, QuadraticResult>(1, 0, -1, QuadraticResult.TwoDistinctRealRoots)
             .WithTestDisplayName("SUP-QE-23: a!=0,b=0,c<0 -> TwoDistinctRealRoots"),
         new TheoryDataRow<int, int, int, QuadraticResult>(1, 5, 0, QuadraticResult.TwoDistinctRealRoots)
@@ -65,7 +67,7 @@ public class QuadraticBoundaryTests
         new TheoryDataRow<int, int, int, QuadraticResult>(-1, 0, -1, QuadraticResult.NoRealRoots)
             .WithTestDisplayName("SUP-QE-25: a<0,b=0,c<0 -> NoRealRoots"),
         new TheoryDataRow<int, int, int, QuadraticResult>(0, -1, 0, QuadraticResult.OneLinearRoot)
-            .WithTestDisplayName("SUP-QE-26: a==0,b!=0,c==0 -> OneLinearRoot"),
+            .WithTestDisplayName("SUP-QE-26: a==0,b!=0,c==0 -> OneLinearRoot")
     ];
 
     [Theory]

@@ -36,7 +36,7 @@ pdfauthor={Mai Hai Thanh}}
 \author{
     \VN{Mai H\h{a}i Th\`anh}\textsuperscript{a}\\[0.5em]
     \small
-    \textsuperscript{a}Independent research; FIT-UET-VNU, Hanoi, Vietnam
+    \textsuperscript{a}Independent Research; FIT-UET-VNU, Hanoi, Vietnam
 }
 \date{September 2026}
 
@@ -80,14 +80,14 @@ Sections~4 and~5 -- partitions, boundaries, test cases, mutants -- is derived
 analytically from the stated specification, and where mutation killing is
 discussed there it is explicitly labelled as an \emph{analytically expected}
 outcome (reasoned from the mutant's semantics and the test's expected
-output). Section~\ref{sec:empirical} then reports a second, empirical phase:
-both specifications were implemented, every designed test case was executed
-against the implementation, the two analytically derived mutation matrices
-were re-computed by executing mutant models, and an automated mutation tool
-was run to obtain a measured mutation score. Analytical claims and measured
-results are kept separate: Sections~4, 5 and the appendices retain the
-analytical labelling, and every measured number appears in
-Section~\ref{sec:empirical}.
+output). Each case study then closes with an executed validation
+(\S\ref{sec:atm-exec}, \S\ref{sec:quad-exec}): the specification was
+implemented, every designed test case was executed against the
+implementation, the analytically derived mutation matrix was re-computed by
+executing mutant models, and an automated mutation tool was run to obtain a
+measured mutation score. Analytical claims and measured results are kept
+separate: the analytical subsections retain their labelling, and every
+measured number appears in an executed-validation subsection.
 
 The guiding question behind every test case in this report is:
 
@@ -100,13 +100,12 @@ individual-variable boundary, a derived (multi-variable) boundary, or an
 explicit interaction between constraints. Section~2 lays the theoretical
 groundwork; Section~3 describes the methodology (the pipeline from
 specification to mutation analysis) in the abstract; Sections~4 and~5 apply it
-concretely to the two case studies; Section~6 compares them; Section~7
-discusses the broader lessons, including why single-variable testing
-under-covers interacting systems; Section~\ref{sec:empirical} reports the
-executed validation; Section~\ref{sec:limitations} states limitations;
-Section~\ref{sec:conclusion} concludes. The appendices contain the complete,
-unabridged partition tables, boundary tables, test suites, and mutation
-matrices for both case studies.
+concretely to the two case studies, each ending with its executed validation
+and a discussion; the discussion of Section~5 also compares the two case
+studies (\S\ref{sec:cross-case}) and draws the lessons common to both,
+including why single-variable testing under-covers interacting systems
+(\S\ref{sec:lessons}); Section~\ref{sec:limitations} states limitations;
+Section~\ref{sec:conclusion} concludes.
 
 %=================================================================
 \section{Theoretical Background}
@@ -203,13 +202,15 @@ denominator). Sections~4 and~5 treat all mutant-killing claims as
 \textbf{analytically expected}, derived from reasoning about the mutant's
 semantics against each test's specified expected output; measured mutation
 results, obtained by executing the mutants, are reported separately in
-Section~\ref{sec:empirical}.
+\S\ref{sec:atm-exec} and \S\ref{sec:quad-exec}.
 
 %=================================================================
 \section{Methodology}
 %=================================================================
 
-Both case studies were designed by walking the same six-stage pipeline.
+Both case studies were designed by walking the same six-stage pipeline
+(\S3.1--3.6), and both designs were then validated by a seventh, executed
+stage (\S\ref{sec:exec-method}).
 
 \subsection{From Specification to Domain}
 Each case study begins with an informal problem statement, which is first
@@ -261,6 +262,66 @@ study, and each mutant is checked against the final test suite from Stage~5,
 producing a Test\(\times\)Mutant matrix (\texttt{K}/\texttt{S}/\texttt{--}) that
 is used to argue the suite's adequacy and to flag any surviving mutant as
 evidence of a missing test.
+
+\subsection{Executed Validation}
+\label{sec:exec-method}
+Stages~1--6 produce a design whose mutant-killing claims are
+\emph{analytically expected}. A seventh, executed stage checks that design
+against an implementation of the specification. Both specifications were
+implemented in C\# on .NET~10 (SDK 10.0.401, runtime 10.0.12, Windows~11).
+Tests were written with xUnit.net~v3 (4.0.1) on the Microsoft Testing
+Platform, property-based tests with FsCheck~3.4.0, and mutation testing used
+Stryker.NET~5.0.0\footnote{\url{https://stryker-mutator.io}}. Every number
+reported in \S\ref{sec:atm-exec} and \S\ref{sec:quad-exec} comes from the
+reports of one end-to-end run on 2~October~2026 (clean Release build,
+compiler warnings treated as errors); none is estimated. The executed stage
+consists of four checks per case study:
+
+\begin{enumerate}[label=(\roman*)]
+    \item \textbf{Suite execution.} Each designed test case is one data row
+    that carries its identifier (TC-ATM-\(nn\), TC-QE-\(nn\)) and its
+    partition, boundary and combination columns as test metadata, so a run
+    can be filtered by, e.g., combination C9 alone. Supplementary tests
+    cover values that the boundary analysis names but does not retain, and
+    the implementation's handling of inputs outside the modelled domain.
+    \item \textbf{Matrix reproduction.} Each designed mutant is implemented
+    in an executable reference model of the specification that injects
+    exactly one mutant. The model is first checked to agree with the
+    specification and the implementation on every suite row. For each
+    mutant, the set of suite tests whose output differs from the unmutated
+    model is then compared with the set of \texttt{K} cells in that mutant's
+    column of the analytical matrix, transcribed verbatim.
+    \item \textbf{Tool-generated mutants.} Stryker.NET generates mutants from
+    the implementation's source code with its standard operators. Unlike the
+    designed mutants, this population was not constructed together with the
+    suites.
+    \item \textbf{Properties and exhaustive execution.} FsCheck checks
+    invariants and metamorphic relations on 1{,}000 (ATM) or 2{,}000
+    (quadratic) generated cases per property; where the domain is finite
+    (quadratic), the classifier is executed on all of it.
+\end{enumerate}
+
+Table~\ref{tab:emp-layers} lists the resulting test layers.
+
+\begin{table}[H]
+\centering
+\caption{Executed test layers (number of tests per case study)}
+\label{tab:emp-layers}
+\small
+\begin{tabularx}{\textwidth}{l Y r r}
+\toprule
+Layer & Content & ATM & Quadratic \\
+\midrule
+Designed suite & TC-ATM-01--22; TC-QE-01--16 (TC-QE-08 as two sequence checks) & 22 & 17 \\
+Supplementary & Values named but not retained in \S4.8/\S5.8, domain guards, overflow, undefined status & 18 & 26 \\
+Matrix reproduction & Executable mutants M1--M14 / N1--N10 against the designed suite & 39 & 28 \\
+Properties & Invariants and metamorphic relations (FsCheck) & 8 & 6 \\
+Exhaustive & Every \((a,b,c)\in[-100,100]^3\) & -- & 2 \\
+\midrule
+Total & & 87 & 79 \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 %=================================================================
 \section{Case Study I: ATM Withdrawal Validation}
@@ -595,12 +656,13 @@ The representative over-range value used below is instead $20{,}050{,}000$
 range grounds alone (divisibility holds) and cleanly isolates that failure
 mode from the granularity failure already exercised at $50{,}001$
 (TC-ATM-07) and $60{,}000$ (TC-ATM-18, \S4.12); no test in the suite uses
-$19{,}999{,}999$ itself, since its role here is illustrative (Table 4), not
+$19{,}999{,}999$ itself, since its role here is illustrative (Table~\ref{tab:atm-amount-hi}), not
 a retained test case:
 
 \begin{table}[H]
 \centering
 \caption{\(\mathit{amount}\) upper boundary --- discrete range boundary under a granularity constraint}
+\label{tab:atm-amount-hi}
 \begin{tabularx}{\textwidth}{L{3.2cm} L{3.7cm} L{3.2cm} Y}
 \toprule
 Granularity-invalid side & Last reachable value & Range-invalid side & Expected behaviour \\
@@ -783,8 +845,8 @@ TC-ATM-20 (\(=\)C7) for M10, TC-ATM-21 (\(=\)C8) for M13, and TC-ATM-22
 the specification. The resulting twenty-two tests are the complete,
 non-redundant ATM suite; every value below was computed directly from the
 formal specification in \S4.2, not asserted informally. The same
-twenty-two tests, in inputs-and-output form only, are reprinted as
-Appendix~C.
+twenty-two tests are listed below; the coverage of every partition and every
+boundary by these tests is checked directly after the table.
 
 \begingroup\small\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.15}
 \begin{xltabular}{\textwidth}{@{}l L{2.3cm} L{2.3cm} L{2.2cm} c Y@{}}
@@ -889,6 +951,81 @@ precedence from a reversed one (\S4.12, M14). \\
 \end{xltabular}
 \endgroup
 
+\paragraph{Coverage check.} Tables~\ref{tab:atm-partition-coverage}
+and~\ref{tab:atm-boundary-coverage} read the suite in the opposite direction:
+starting from each partition (\S4.6) and each boundary (\S4.8--4.9), they name
+the tests that exercise it, so that a class or boundary without a test would
+be visible as an empty cell.
+
+{\small
+\begin{longtable}{L{2.2cm} L{7.2cm} L{1.7cm} L{2.7cm}}
+\caption{ATM partition coverage: every class of \S4.6 and a test that represents it} \label{tab:atm-partition-coverage}\\
+\toprule
+Partition ID & Mathematical definition & Valid / Invalid & Representative test \\
+\midrule
+\endfirsthead
+\toprule
+Partition ID & Mathematical definition & Valid / Invalid & Representative test \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+$P_{a,1}$ & $\{x\in\mathbb{Z}\mid x<50{,}000\}$ & Invalid & TC-ATM-02 \\
+$P_{a,2}$ & $\{x\in\mathbb{Z}\mid 50{,}000\le x\le20{,}000{,}000\wedge x\equiv0\!\!\pmod{50{,}000}\}$ & Valid & TC-ATM-01 \\
+$P_{a,3}$ & $\{x\in\mathbb{Z}\mid 50{,}000\le x\le20{,}000{,}000\wedge x\not\equiv0\!\!\pmod{50{,}000}\}$ & Invalid & TC-ATM-07 \\
+$P_{a,4}$ & $\{x\in\mathbb{Z}\mid x>20{,}000{,}000\}$ & Invalid & TC-ATM-06 \\
+\(P_{\mathit{bal},1}\) & \(\{x\in\mathbb{Z}\mid x<\mathit{amount}+\mathit{fee}\}\) & Invalid & TC-ATM-08 \\
+\(P_{\mathit{bal},2}\) & \(\{x\in\mathbb{Z}\mid x\ge\mathit{amount}+\mathit{fee}\}\) & Valid & TC-ATM-09 \\
+\(P_{\mathit{dl},1}\) & \(\{(d,a)\mid d+a\le20{,}000{,}000\}\) & Valid & TC-ATM-11 \\
+\(P_{\mathit{dl},2}\) & \(\{(d,a)\mid d+a>20{,}000{,}000\}\) & Invalid & TC-ATM-12 \\
+\(P_{s,1}\) & \(\{\mathrm{Active}\}\) & Valid & TC-ATM-01 \\
+\(P_{s,2}\) & \(\{\mathrm{Frozen}\}\) & Invalid & TC-ATM-13 \\
+\(P_{i,1}\) & \(\{\mathrm{True}\}\) (fee\(=0\)) & Valid (numerically neutral) & TC-ATM-01 \\
+\(P_{i,2}\) & \(\{\mathrm{False}\}\) (fee\(=50{,}000\)) & Valid (numerically neutral) & TC-ATM-14 \\
+\end{longtable}
+}
+Every listed partition has at least one representative test in the suite
+(Table~\ref{tab:atm-suite-sample}); completeness holds because every input value falls in exactly
+one listed class per input dimension, and the joint suite covers the
+Cartesian combinations identified in \S4.9.
+
+\begin{longtable}{L{1.8cm} L{4.2cm} L{1.6cm} L{2.2cm} L{3.6cm}}
+\caption{ATM boundary coverage: every boundary of \S4.8--4.9 and the tests that exercise it} \label{tab:atm-boundary-coverage}\\
+\toprule
+Boundary ID & Definition & Type & Covered by & Expected change \\
+\midrule
+\endfirsthead
+\toprule
+Boundary ID & Definition & Type & Covered by & Expected change \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+B-amt-lo & \(\mathit{amount}=50{,}000\) & Input-domain & TC-ATM-02, -03 &
+Invalid\(\to\)valid-range \\
+B-amt-hi & \(\mathit{amount}=20{,}000{,}000\) & Input-domain & TC-ATM-05, -06 &
+Valid-range\(\to\)invalid \\
+B-amt-div & \(\mathit{amount}\bmod 50{,}000=0\) & Invalid/\allowbreak valid & TC-ATM-07 &
+Multiple\(\to\)non-multiple \\
+B-bal & \(\mathit{balance}=\mathit{amount}+\mathit{fee}\) & Derived & TC-ATM-08,
+-09, C1/C2 & Rejected\(\to\)Approved \\
+B-daily & \(\mathit{dailyUsed}+\mathit{amount}=20{,}000{,}000\) & Derived &
+TC-ATM-10, -11, -12 & Approved \(\to\) Rejected\_\allowbreak DailyLimit \\
+B-status & \(\mathrm{Active}\leftrightarrow\mathrm{Frozen}\) & Logical &
+TC-ATM-13 & Any \(\to\) Rejected\_\allowbreak InvalidAccount \\
+B-fee & \(\mathit{isInternal}\) True\(\leftrightarrow\)False & Multi-variable
+interaction & TC-ATM-14, C5 & Approved \(\leftrightarrow\) Rejected\_\allowbreak InsufficientBalance \\
+B-multi1 & B-bal \(\wedge\) B-daily simultaneously & Multi-variable
+interaction & TC-ATM-15/16, C3/C4 & Confirms precedence order (R3/R5) \\
+B-fee-hi & \(\mathit{balance}=\mathit{amount}+100{,}000\) (overcharge
+threshold) & Multi-variable interaction & TC-ATM-21, C8 & Isolates the
+External-Approved path; distinguishes correct fee from an overcharging one \\
+B-multi2 & R1 \(\wedge\) R2 simultaneously invalid & Multi-variable
+interaction & TC-ATM-22, C9 & Confirms precedence order (R1/R2) \\
+B-out & 5-way \(D_{out}\) partition & Output & entire suite & Every rejection
+reason is individually reachable \\
+\end{longtable}
+
 \subsection{Mutation Model}
 
 \begingroup\small
@@ -953,7 +1090,7 @@ output for that test's input differs from the original specification's
 expected output. \texttt{K} means ``this test's input makes the mutant
 compute a different result than the original,'' derived by hand; the matrix
 was afterwards re-computed by executing the mutants and matched cell for
-cell (Section~\ref{sec:emp-matrix}).
+cell (\S\ref{sec:atm-exec}).
 
 Every cell below was obtained by substituting the test's five input values
 into both the original rule set (\S4.2) and the mutated rule set, evaluating
@@ -1090,10 +1227,60 @@ analytically expected matrix supports full (\(13/13\)) expected coverage;
 this is a claim about the \emph{design} of the suite against the stated
 specification (its executed confirmation and a tool-measured score on an
 independent mutant population are reported in
-Section~\ref{sec:empirical}), and (per Section~\ref{sec:limitations}) the
+\S\ref{sec:atm-exec}), and (per Section~\ref{sec:limitations}) the
 mutant set was itself constructed with knowledge of the suite's boundaries,
 so this full coverage should not be read as unbiased evidence that boundary
 tests generally dominate interior ones.
+
+\subsection{Executed Validation}
+\label{sec:atm-exec}
+
+This subsection reports the executed stage of \S\ref{sec:exec-method} for the
+ATM validator.
+
+\paragraph{Implementation decisions.} The specification leaves two points
+open, so the implementation makes an explicit choice for each and tests it.
+First, \(\mathit{dailyUsed}<0\), which \S4.2 excludes from the domain, raises
+an argument-range error instead of returning an element of \(D_{out}\); this
+check runs before R1, so a frozen account with a negative
+\(\mathit{dailyUsed}\) also raises it. Second, R3 is evaluated in the
+rearranged form \(\mathit{dailyUsed}>20{,}000{,}000-\mathit{amount}\). It is
+equivalent to R3 for every input that reaches it (R2 has already bounded
+\(\mathit{amount}\)), but unlike the direct sum it cannot overflow when
+\(\mathit{dailyUsed}\) is close to the largest representable integer; the
+specification does not address overflow.
+
+\paragraph{Suite execution.} All 87 ATM tests passed (0.48~s): the 22
+designed tests TC-ATM-01--22, 18 supplementary boundary and guard tests,
+39 matrix-reproduction checks and 8 properties
+(Table~\ref{tab:emp-layers}).
+
+\paragraph{Matrix reproduction.} All 14 columns of
+Table~\ref{tab:atm-matrix} were reproduced exactly: every \texttt{K} cell is
+reproduced, and no test kills a mutant that the matrix marks \texttt{S} or
+\texttt{--}. The executed score is therefore \(13/13\) non-equivalent
+mutants, as derived in \S4.12. The equivalence of M4 was additionally checked
+by executing the original and M4 for every integer amount in
+\([-100{,}000,\ 20{,}200{,}000]\) (20{,}300{,}001 values, all other rules
+passing); no output differed. The reproduction depends on one reading of
+mutant semantics that Table~\ref{tab:atm-mutants} states only informally: for
+M5 (\(\mathrm{R1}\wedge\mathrm{R2}\to\mathrm{R1}\vee\mathrm{R2}\)), a single
+failure of R1 or R2 lets evaluation continue to R3 and R5, while a double
+failure is reported as Rejected\_InvalidAccount (R1 first). This is the
+reading under which TC-ATM-22 survives M5, as Table~\ref{tab:atm-matrix}
+states.
+
+\paragraph{Tool-generated mutants.} Stryker.NET generated 23 mutants; one was
+ignored by the tool as a redundant block removal, and all other 22 were
+killed (0 survived; measured mutation score 100\,\%). By operator, the killed
+mutants are equality 10, conditional 4, arithmetic 3, logical 2, negation 2
+and statement removal 1. The designed suite alone kills 21 of the 22. The
+one it does not kill removes the \(\mathit{dailyUsed}\ge0\) guard; that input
+lies outside the domain of \S4.2, so by construction no designed test can
+reach it, and it is killed by the supplementary guard tests. Every
+tool-generated mutant inside the modelled domain, including the relational
+mutants on \(\mathit{balance}<T\) and on the rearranged R3, is killed by the
+designed suite.
 
 \subsection{Case Study Discussion}
 
@@ -1444,7 +1631,7 @@ fixed and increasing only \(b\) (\(1\to2\to3\)) drives \(\Delta\) through
 \(-3\to0\to5\), i.e.\ through
 \(\mathrm{NoRealRoots}\to\mathrm{OneRepeatedRealRoot}\to\mathrm{TwoDistinctRealRoots}\)
 under a genuinely single-variable (\(b\)-only) change -- the qualitative-change
-demonstration required by \S5.8/\S7. \\
+demonstration required by \S5.8/\S\ref{sec:lessons}. \\
 \addlinespace
 Q8 & \((2,4,2)\) vs.\ \((1,2,1)\) & Same \(\Delta=0\) boundary reached via a
 \emph{different} coefficient combination (both \(a\) and \(c\) doubled): shows
@@ -1489,7 +1676,8 @@ incrementing $b$ alone, from a fixed starting tuple, not as independent,
 individually-chosen samples); no other retained test overlaps another's
 coefficients. The resulting sixteen tests are otherwise non-redundant, and
 are the complete quadratic suite; the same sixteen tests, in
-coefficients-and-output form only, are reprinted as Appendix~G.
+are listed below; the coverage of every partition and every boundary by these
+tests is checked directly after the table.
 
 \begingroup\small\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.15}
 \begin{xltabular}{\textwidth}{@{}l L{2.1cm} L{2.1cm} L{2.1cm} c Y@{}}
@@ -1552,6 +1740,72 @@ so that the suite contains at least one \(\Delta\)-negative representative that
 is genuinely deep interior rather than boundary-adjacent, per \S5.5). \\
 \end{xltabular}
 \endgroup
+
+\paragraph{Coverage check.} Tables~\ref{tab:quad-partition-coverage}
+and~\ref{tab:quad-boundary-coverage} read the suite in the opposite direction:
+starting from each partition (\S5.6) and each boundary (\S5.8--5.9), they name
+the tests that exercise it.
+
+{\small
+\begin{longtable}{L{2.4cm} L{7.0cm} L{1.6cm} L{2.5cm}}
+\caption{Quadratic partition coverage: every class of \S5.6 and a test that represents it} \label{tab:quad-partition-coverage}\\
+\toprule
+Partition ID & Mathematical definition & Valid / Invalid & Representative test \\
+\midrule
+\endfirsthead
+\toprule
+Partition ID & Mathematical definition & Valid / Invalid & Representative test \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\(P_{a^-}\) & \(\{a\in D_a\mid a<0\}\) & Valid (all inputs valid) & TC-QE-10 \\
+\(P_{a^0}\) & \(\{a\in D_a\mid a=0\}\) & Valid & TC-QE-04, -05, -06 \\
+\(P_{a^+}\) & \(\{a\in D_a\mid a>0\}\) & Valid & TC-QE-01 \\
+\(P_{\Delta^-}\) & \(\{(a,b,c)\in D\mid a\ne0,\Delta<0\}\) & Valid & TC-QE-03 \\
+\(P_{\Delta^0}\) & \(\{(a,b,c)\in D\mid a\ne0,\Delta=0\}\) & Valid & TC-QE-02 \\
+\(P_{\Delta^+}\) & $\{(a,b,c)\in D\mid a\ne0,\Delta>0\}$ & Valid & TC-QE-01 \\
+\(P_{b\ne0}\) & \(\{(0,b,c)\in D\mid b\ne0\}\) & Valid & TC-QE-04 \\
+\(P_{b0,c\ne0}\) & \(\{(0,0,c)\in D\mid c\ne0\}\) & Valid & TC-QE-05 \\
+\(P_{b0,c0}\) & \(\{(0,0,0)\}\) & Valid & TC-QE-06 \\
+\end{longtable}
+}
+Since every \((a,b,c)\in D\) is legitimate input to a mathematical classifier,
+all listed partitions are ``valid'' in the invalid-input sense (there is no
+malformed-input class); the valid/invalid column instead confirms the
+partitioning is exhaustive over \(D\) with no gap.
+
+\begin{longtable}{L{1.8cm} L{4.0cm} L{1.6cm} L{2.2cm} L{3.8cm}}
+\caption{Quadratic boundary coverage: every boundary of \S5.8--5.9 and the tests that exercise it} \label{tab:quad-boundary-coverage}\\
+\toprule
+Boundary ID & Definition & Type & Covered by & Expected change \\
+\midrule
+\endfirsthead
+\toprule
+Boundary ID & Definition & Type & Covered by & Expected change \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+B-a0 & \(a=0\) & Logical (case split) & TC-QE-04,-05,-06 vs.\ TC-QE-01,-02,-03 &
+Quadratic algorithm \(\to\) linear algorithm \\
+B-delta & \(\Delta=b^2-4ac=0\) & Derived & TC-QE-02, -08 (middle), -09 &
+NoRealRoots/\allowbreak TwoDistinct \(\to\) OneRepeated \\
+B-b0-nested & \(b=0\) (given \(a=0\)) & Multi-variable interaction (nested) &
+TC-QE-05 vs.\ TC-QE-04 & OneLinearRoot \(\to\) \{NoSolution, InfiniteMany\} \\
+B-c0-nested & \(c=0\) (given \(a=0,b=0\)) & Multi-variable interaction (nested) &
+TC-QE-06 vs.\ TC-QE-05 & NoSolution \(\to\) Infinitely\allowbreak ManySolutions \\
+B-adom & \(a\in\{-100,100\}\) & Input-domain & TC-QE-11, -12 & No branch
+change; extreme-magnitude sanity \\
+B-bdom & \(b=100\) & Input-domain & TC-QE-13, -14 & No branch
+change (quadratic branch); gates branch only under \(a=0\) \\
+B-reach & Nearest reachable \(\Delta\) to $0$ (\(-3,+1\) vs.\ unreachable
+\(-1,-2\)) & Derived (discrete-domain) & TC-QE-03, -07 & Confirms BVA
+neighbour selection is reachability-checked \\
+B-cross & \(\Delta\) crossing \(-3\to0\to5\) via \(b\) alone (\(a=1,c=1\) fixed) &
+Multi-variable interaction & TC-QE-08 (Q7) & Full qualitative-change
+demonstration \\
+\end{longtable}
 
 \subsection{Mutation Model}
 
@@ -1682,6 +1936,97 @@ or two tests that exercise that sub-case (TC-QE-06; TC-QE-05; TC-QE-04 and
 TC-QE-14, respectively), with every other test correctly marked \texttt{--}
 since the mutated code path is never reached for them.
 
+\subsection{Executed Validation}
+\label{sec:quad-exec}
+
+This subsection reports the executed stage of \S\ref{sec:exec-method} for the
+quadratic solver.
+
+\paragraph{Implementation decisions.} Coefficients outside \([-100,100]\)
+(\S5.2) raise an argument-range error instead of returning an element of
+\(D_{out}\). For \(a\neq0\), the sign of \(\Delta\) is classified by testing
+\(\Delta<0\) first, then \(\Delta>0\), and returning OneRepeatedRealRoot
+otherwise. Table~\ref{tab:quad-mutants} states N2 and N3 only informally;
+this order is the reading under which both relational mutants misclassify
+exactly the \(\Delta=0\) tests, as \S5.12 derives.
+
+\paragraph{Suite execution.} All 79 quadratic tests passed (0.55~s, including
+the exhaustive sweep below): 17 designed-suite tests (TC-QE-08 as two
+sequence checks), 26 supplementary boundary and guard tests, 28
+matrix-reproduction checks, 6 properties and 2 exhaustive checks
+(Table~\ref{tab:emp-layers}).
+
+\paragraph{Matrix reproduction.} All 10 columns of
+Table~\ref{tab:quad-matrix} were reproduced exactly, giving an executed score
+of \(10/10\), as derived in \S5.12.
+
+\paragraph{Tool-generated mutants.} Stryker.NET generated 24 mutants; three
+were ignored by the tool as redundant block removals, and all other 21 were
+killed (0 survived; measured mutation score 100\,\%). By operator, the killed
+mutants are equality 7, statement removal 6, arithmetic 4, conditional 2 and
+negation 2. The designed suite alone kills 15 of the 21. The six it does not
+kill each remove one of the six coefficient-range guards; those inputs lie
+outside the domain of \S5.2, so by construction no designed test can reach
+them, and they are killed by the supplementary guard tests. The two
+\(\Delta=0\) relational mutants (\(\Delta<0\to\Delta\le0\) and
+\(\Delta>0\to\Delta\ge0\), the tool-generated counterparts of N3 and N2) were
+killed by the designed-suite tests and by the matrix-reproduction checks,
+consistent with \S5.12.
+
+The run also exposed a practical hazard. In an earlier version of the
+implementation, the sign of \(\Delta\) was classified with a relational
+pattern match (\texttt{< 0}, \texttt{> 0}, default). Stryker's boundary
+mutants of that form (\texttt{<= 0}, \texttt{>= 0}) make the default arm
+unreachable, which the C\# compiler rejects, so four mutants were reported as
+compile errors and excluded from the score. The score was still reported as
+100\,\%, yet it no longer covered the \(\Delta=0\) boundary at all. With the
+equivalent if-statement form, those four mutants compile and are killed. A
+measured mutation score is therefore only as informative as the set of
+mutants that the tool manages to compile; the excluded mutants have to be
+inspected, not only the score.
+
+\paragraph{Exhaustive execution of the domain.} Because \(D\) is finite, the
+classifier was executed on all \(201^3=8{,}120{,}601\) triples. The check
+confirms that it never fails, that it agrees with a re-statement of the
+specification in arbitrary-precision arithmetic, and that
+\(\Delta\bmod 4\in\{0,1\}\) for every triple (\S5.8).
+Table~\ref{tab:emp-classes} gives the resulting distribution.
+
+\begin{table}[H]
+\centering
+\caption{Output classes over the full domain \([-100,100]^3\)}
+\label{tab:emp-classes}
+\small
+\begin{tabular}{l r r}
+\toprule
+Output & Triples & Share \\
+\midrule
+TwoDistinctRealRoots & 5{,}055{,}984 & 62.26\,\% \\
+NoRealRoots & 3{,}023{,}112 & 37.23\,\% \\
+OneLinearRoot & 40{,}200 & 0.50\,\% \\
+OneRepeatedRealRoot & 1{,}104 & 0.0136\,\% \\
+NoSolution & 200 & 0.0025\,\% \\
+InfinitelyManySolutions & 1 & 0.00001\,\% \\
+\midrule
+Total & 8{,}120{,}601 & 100\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two claims made earlier in this case study can now be stated quantitatively.
+First, the reachability argument of \S5.8 holds over the whole domain: among the
+8{,}080{,}200 quadratic triples (\(a\neq0\)), discriminants in \([-4,4]\)
+occur only as \(-4\) (338 triples), \(-3\) (252), \(0\) (1{,}104), \(1\)
+(1{,}880) and \(4\) (1{,}754); \(\Delta\in\{-2,-1,2,3\}\) never occurs.
+Second, the derived boundary \(\Delta=0\) occupies 1{,}104 of those
+8{,}080{,}200 triples (0.0137\,\%). A test selected uniformly at random from
+that set hits it with probability \(1.37\times10^{-4}\), so a random suite of
+1{,}000 such tests contains no \(\Delta=0\) case with probability
+\(\approx0.87\), and would then kill neither N2 nor N3, which differ from the
+original only at \(\Delta=0\). This is the quantitative form of the argument
+in \S5.9 that the derived boundary has to be constructed (Q5, Q7, Q8), not
+sampled.
+
 \subsection{Case Study Discussion}
 
 The quadratic case study demonstrates a second, distinct flavour of
@@ -1694,11 +2039,11 @@ no-solution / infinite-solutions) further shows that a single categorical
 boundary (\(a=0\)) can itself contain a second, hidden equivalence structure
 that only becomes visible once the outer boundary has already been crossed.
 
-%=================================================================
-\section{Cross-Case Analysis}
-%=================================================================
 
-\subsection{Domain Comparison}
+\subsubsection{Comparison with Case Study I}
+\label{sec:cross-case}
+
+\paragraph{Domain Comparison.}
 Both case studies have multi-variable, mixed or purely-integer input
 domains. The ATM domain is unbounded (\(\mathbb{Z}\) for the numeric inputs)
 plus two small categorical domains; the quadratic domain is a bounded cube
@@ -1707,7 +2052,7 @@ The ATM's output domain is a flat 5-way categorical partition; the
 quadratic's is a flat 6-way categorical partition, but internally structured
 by a 2-level case split (Case A/B, then a further 3-way split inside each).
 
-\subsection{Partition Comparison}
+\paragraph{Partition Comparison.}
 The ATM's partitions are almost all defined by \emph{linear inequalities and
 a modulus condition} on single variables or simple sums. The quadratic's
 partitions are defined by a \emph{quadratic form} (\(\Delta=b^2-4ac\)) and a
@@ -1716,10 +2061,12 @@ classes; both required an explicit reachability/discreteness check
 (ATM: which integers are multiples of $50{,}000$; quadratic: which integers
 are attainable discriminants) before boundary values could be safely chosen.
 
-\subsection{Boundary Comparison}
+\paragraph{Boundary Comparison.} Table~\ref{tab:boundary-types} lists the boundary types
+present in each case study.
 \begin{table}[H]
 \centering
 \caption{Boundary types present in each case study}
+\label{tab:boundary-types}
 \begin{tabularx}{\textwidth}{L{4cm} Y Y}
 \toprule
 Boundary type & ATM & Quadratic \\
@@ -1737,7 +2084,7 @@ boundaries simultaneously & \(\Delta\) crossing via any of \(a,b,c\) \\
 \end{tabularx}
 \end{table}
 
-\subsection{Boundary Interaction Comparison}
+\paragraph{Boundary Interaction Comparison.}
 In the ATM, boundary interaction is \emph{additive/linear} (a threshold that
 shifts by a constant amount, or two independent sums that can each be tight
 at once). In the quadratic solver, boundary interaction is
@@ -1748,7 +2095,7 @@ time test plan can reliably locate the interaction boundary; both required
 explicitly solving for one variable in terms of the others to construct a
 combination test.
 
-\subsection{Mutation Analysis Comparison}
+\paragraph{Mutation Analysis Comparison.}
 ATM mutants are dominated by relational-operator and boundary-constant
 mutations (reflecting its rule-based, inequality-heavy specification);
 quadratic mutants are dominated by arithmetic-formula mutations and
@@ -1759,11 +2106,16 @@ dedicated boundary test are the ones that only misbehave exactly at the
 confirming, independently in both domains, that boundary-adjacent tests carry
 disproportionate fault-detection value relative to interior tests.
 
-%=================================================================
-\section{Discussion}
-%=================================================================
+\paragraph{Executed Comparison.} Executed against an implementation, the two
+designs behaved alike (\S\ref{sec:atm-exec}, \S\ref{sec:quad-exec}): both
+analytical matrices were reproduced cell for cell, and in both case studies the
+only tool-generated mutants that the designed suite did not kill were those
+removing a guard on inputs outside the modelled domain.
 
-\subsection{From Partitions to Boundaries}
+\subsubsection{Lessons Common to Both Case Studies}
+\label{sec:lessons}
+
+\paragraph{From Partitions to Boundaries.}
 Equivalence partitioning tells the tester \emph{where} to sample; it says
 nothing about \emph{which point within a class} to sample. Both case studies
 show that an arbitrarily chosen representative of a valid class (say, any
@@ -1775,7 +2127,7 @@ be wrong. BVA is therefore not an alternative to EP but its necessary
 refinement: EP supplies the classes, BVA supplies the points within (and
 between) them that carry the highest diagnostic value.
 
-\subsection{Why Single-Variable Testing Is Insufficient}
+\paragraph{Why Single-Variable Testing Is Insufficient.}
 Both case studies contain at least one constraint that is a genuine function
 of two or more variables (\(\mathit{balance}\ge \mathit{amount}+\mathit{fee}\);
 \(\Delta=b^2-4ac\)). For any such constraint \(\phi(x,y)=0\), the set of points
@@ -1790,7 +2142,7 @@ to reliably test \(\phi=0\) is to \emph{solve} the constraint for one variable
 given the other(s) and construct the test tuple directly -- which is by
 definition a boundary-combination test, not a single-variable one.
 
-\subsection{Multi-Variable Boundary Interactions}
+\paragraph{Multi-Variable Boundary Interactions.}
 The ATM's fee interaction (\S4.9, C5) and the quadratic's crossing tuple
 (\S5.9, Q7) are structurally the same manoeuvre: hold all but one variable
 fixed, and show that varying the remaining one alone flips the output across
@@ -1799,19 +2151,18 @@ manoeuvre generalises across a purely rule-based domain (ATM) and a purely
 algebraic domain (quadratic), suggesting it is a property of \emph{derived
 boundaries in general}, not an artifact of either problem.
 
-\subsection{Mutation Testing as Test-Suite Evaluation}
+\paragraph{Mutation Testing as Test-Suite Evaluation.}
 Both mutation matrices (\S4.12, \S5.12) show the same pattern: mutants that
 alter behaviour only exactly at an equality boundary (\(\Delta=0\), or
 \(\mathit{balance}=T\)) are killed exclusively by the corresponding boundary
 test and survive every interior test. Derived analytically in Sections~4
-and~5 and reproduced by execution in Section~\ref{sec:emp-matrix}, this is
+and~5 and reproduced by execution in \S\ref{sec:atm-exec} and
+\S\ref{sec:quad-exec}, this is
 direct evidence for BVA's central premise -- that boundary tests are not
 merely \emph{additional} coverage but carry fault-detection power that
 interior tests structurally cannot provide for this class of fault.
 
-\subsection{Why Boundary-Focused Testing Works: A Summary}
-
-\paragraph{Interactions, not isolated inputs, define behaviour.} Both case
+\paragraph{Interactions, Not Isolated Inputs, Define Behaviour.} Both case
 studies exhibit the same underlying structure once stripped of domain
 vocabulary: outputs are not properties of any single input in isolation but
 of \emph{relations among} inputs.
@@ -1823,16 +2174,17 @@ determines which relationship is even being asked. Likewise
 \(\Delta=b^2-4ac\) has no meaning attached to \(a\), \(b\), or \(c\)
 individually; it is a joint property that only exists as a relation among
 the three. This is why a test plan cannot treat each input as an
-independent variable to be covered in isolation: \S6.4 and \S7.2's
-demonstration that a single-variable BVA plan almost never lands on a
-derived boundary is the direct cost of doing so. A test plan that studies
+independent variable to be covered in isolation: as the comparison of
+boundary interactions in \S\ref{sec:cross-case} and the single-variable
+argument above show, a single-variable BVA plan almost never lands on a
+derived boundary, and that is the direct cost of doing so. A test plan that studies
 each input as though it were independent of the others systematically
 misses these interactions; only a plan that treats the joint relation, not
 the individual variable, as the unit of analysis -- which is exactly what
 the boundary-combination tests (C1--C9, Q1--Q9) are built to do -- can
 reliably exercise them.
 
-\paragraph{A one-unit quantitative step can flip the output category.} The
+\paragraph{A One-Unit Quantitative Step Can Flip the Output Category.} The
 second recurring pattern across both case studies is that a derived
 quantity can range continuously (here, in integer steps) across a wide
 region while the system's output classification stays constant, and then
@@ -1861,7 +2213,7 @@ or straddling the exact transition point can. This is offered as the
 summary intuition behind BVA's emphasis on boundaries, not as an
 independent proof of it: the mutation matrices in \S4.12 and \S5.12
 (analytically derived, then reproduced by execution in
-Section~\ref{sec:emp-matrix}) are consistent with it (mutants that only
+\S\ref{sec:atm-exec} and \S\ref{sec:quad-exec}) are consistent with it (mutants that only
 misbehave exactly at an equality boundary are killed exclusively by
 boundary tests), but, as Section~\ref{sec:limitations} notes, the mutant set
 analysed here was itself chosen to probe
@@ -1869,226 +2221,14 @@ those same boundaries, so this consistency should be read as an
 illustration of the pattern, not as independent, unbiased evidence for it.
 
 %=================================================================
-\section{Empirical Validation}
-\label{sec:empirical}
-%=================================================================
-
-Sections~4 and~5 derive every test case and every mutant-killing claim
-analytically. This section reports the second phase: both specifications
-were implemented, the designed suites were executed against the
-implementations, the two Test\(\times\)Mutant matrices were re-computed by
-executing the mutants, and an automated mutation tool was applied to obtain a
-measured mutation score on a mutant population that was \emph{not} designed
-alongside the suites. All numbers below come from the reports produced by
-one end-to-end run (2~October~2026); none is estimated.
-
-\subsection{Implementation and Test Harness}
-\label{sec:emp-setup}
-
-Both functions were implemented in C\# on .NET~10 (SDK 10.0.401, runtime
-10.0.12, Windows~11): \texttt{AtmService.Withdraw} evaluates R1\(\to\)R2\(\to\)R3\(\to\)R5
-and returns the first failing rule; \texttt{QuadraticSolver.Solve}
-implements Cases~A and~B of \S5.2. The specification leaves input outside
-the modelled domain open, so two implementation decisions were made and are
-tested explicitly: \(\mathit{dailyUsed}<0\) (excluded from the domain in
-\S4.2) and coefficients outside \([-100,100]\) (\S5.2) raise an
-argument-range error instead of returning an element of \(D_{out}\); the
-\(\mathit{dailyUsed}\) check runs before R1. R3 is evaluated in the
-rearranged form \(\mathit{dailyUsed}>20{,}000{,}000-\mathit{amount}\), which
-is equivalent to the stated rule but cannot overflow for large
-\(\mathit{dailyUsed}\); the report's specification does not address
-overflow, and a direct sum would wrap for values near the top of the
-integer range.
-
-Tests were written with xUnit.net~v3 (4.0.1) on the Microsoft Testing
-Platform, property-based tests with FsCheck~3.4.0, and mutation testing used
-Stryker.NET~5.0.0\footnote{\url{https://stryker-mutator.io}}. Each test case of
-Tables~\ref{tab:atm-suite-sample} and~\ref{tab:quad-suite-sample} is one
-data row carrying its paper identifier and its partition, boundary and
-combination columns as test metadata, so a run can be filtered by, e.g.,
-combination C9 alone. Table~\ref{tab:emp-layers} lists the test layers.
-
-\begin{table}[H]
-\centering
-\caption{Executed test layers and results (all tests passed)}
-\label{tab:emp-layers}
-\small
-\begin{tabularx}{\textwidth}{l Y r r}
-\toprule
-Layer & Purpose & ATM & Quadratic \\
-\midrule
-Paper suite & TC-ATM-01--22, TC-QE-01--16 (TC-QE-08 as two sequence checks) & 22 & 17 \\
-Supplementary boundaries & Values named but not retained in \S4.8/\S5.8, domain guards, overflow, undefined status & 18 & 26 \\
-Mutation-matrix checks & Executable mutants M1--M14 / N1--N10 against the paper suites (\S\ref{sec:emp-matrix}) & 39 & 28 \\
-Properties (FsCheck) & Invariants and metamorphic relations, 1{,}000 / 2{,}000 generated cases each & 8 & 6 \\
-Exhaustive sweep & Every \((a,b,c)\in[-100,100]^3\) (\S\ref{sec:emp-exhaustive}) & -- & 2 \\
-\midrule
-Total & & 87 & 79 \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-All 166 tests passed in a clean Release build compiled with warnings treated
-as errors; each test project completed in under one second of wall-clock
-time (0.48~s for ATM, 0.55~s for the quadratic project, including the
-8.1-million-triple sweep).
-
-\subsection{Executed Reproduction of the Mutation Matrices}
-\label{sec:emp-matrix}
-
-Each mutant of Tables~\ref{tab:atm-mutants} and~\ref{tab:quad-mutants} was
-implemented in an executable reference model of the specification that can
-inject exactly one mutant. The model was first checked against the
-specification and the implementation on every suite row (both agree with the
-expected outputs of Appendices~C and~G). For each mutant, the set of suite
-tests whose output differs from the unmutated model was then computed and
-compared with the set of \texttt{K} cells in that mutant's column of
-Table~\ref{tab:atm-matrix} or Table~\ref{tab:quad-matrix}, transcribed
-verbatim.
-
-\textbf{Result.} All 24 columns matched exactly: every \texttt{K} cell of
-both matrices is reproduced, and no test kills a mutant that the matrices
-mark \texttt{S} or \texttt{--}. The executed scores are therefore \(13/13\)
-non-equivalent ATM mutants and \(10/10\) quadratic mutants, as derived
-analytically. The equivalence of M4 (\S4.12) was additionally checked by
-executing the original and M4 for every integer amount in
-\([-100{,}000,\ 20{,}200{,}000]\) (20{,}300{,}001 values, all other rules
-passing); no output differed.
-
-The reproduction depends on two readings of mutant semantics that the tables
-state only informally, and it should be read with them in mind. For M5
-(\(\mathrm{R1}\wedge\mathrm{R2}\to\mathrm{R1}\vee\mathrm{R2}\)), a single
-failure of R1 or R2 lets evaluation continue to R3 and R5, while a double
-failure is reported as Rejected\_InvalidAccount (R1 first); this is the
-reading under which TC-ATM-22 survives M5, as Table~\ref{tab:atm-matrix}
-states. For N2 and N3, the classifier tests \(\Delta<0\) first, then
-\(\Delta>0\), and returns OneRepeatedRealRoot otherwise; this is the order
-under which both relational mutants misclassify exactly the \(\Delta=0\)
-tests.
-
-\subsection{Tool-Generated Mutants (Stryker.NET)}
-\label{sec:emp-stryker}
-
-The mutants of \S4.11 and \S5.11 were designed together with the suites
-(Section~\ref{sec:limitations}). As an independent check, Stryker.NET
-generated mutants from the implementation's source code with its standard
-operators; Table~\ref{tab:emp-stryker} summarises the reports.
-
-\begin{table}[H]
-\centering
-\caption{Stryker.NET results on the implementation (full test suite)}
-\label{tab:emp-stryker}
-\small
-\begin{tabularx}{\textwidth}{L{4.2cm} Y Y}
-\toprule
- & ATM & Quadratic \\
-\midrule
-Mutants generated & 23 & 24 \\
-Ignored by Stryker (redundant block removal) & 1 & 3 \\
-Killed / survived & 22 / 0 & 21 / 0 \\
-Measured mutation score & 100\,\% & 100\,\% \\
-Operators (killed) & equality 10, conditional 4, arithmetic 3, logical 2, negation 2, statement 1 &
-equality 7, statement 6, arithmetic 4, conditional 2, negation 2 \\
-Killed by paper-suite tests & 21 of 22 & 15 of 21 \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-Two observations follow from the per-mutant data. First, every tool-generated
-mutant that the paper suites do not kill removes an input-domain guard (the
-\(\mathit{dailyUsed}\ge0\) check; the six coefficient-range checks). These
-inputs lie outside the domains defined in \S4.2 and \S5.2, so by
-construction no paper test can reach them; they are killed only by the
-supplementary guard tests. Every mutant inside the modelled domain, including
-the relational mutants Stryker places on \(\mathit{balance}<T\),
-\(\mathit{dailyUsed}>20{,}000{,}000-\mathit{amount}\), and \(\Delta<0\) /
-\(\Delta>0\), is killed by the paper suites. Second, the \(\Delta=0\)
-relational mutants (\(\Delta<0\to\Delta\le0\), \(\Delta>0\to\Delta\ge0\),
-the tool-generated counterparts of N3 and N2) were killed by the paper-suite
-tests and by the executable matrix checks, consistent with \S5.12.
-
-The run also exposed a practical hazard. In an earlier version of the
-implementation the sign of \(\Delta\) was classified with a relational
-pattern match (\texttt{< 0}, \texttt{> 0}, default). Stryker's boundary
-mutants of that form (\texttt{<= 0}, \texttt{>= 0}) make the default arm
-unreachable, which the C\# compiler rejects, so four mutants were reported
-as compile errors and excluded from the score. The reported score was still
-100\,\%, yet it no longer covered the \(\Delta=0\) boundary at all. With the
-equivalent if-statement form those four mutants compile and are killed. A
-measured mutation score is thus only as informative as the set of mutants
-the tool manages to compile, and the excluded mutants need to be inspected,
-not only the score.
-
-\subsection{Exhaustive Evidence for the Quadratic Domain}
-\label{sec:emp-exhaustive}
-
-Because \(D\) is finite, the classifier was executed on all
-\(201^3=8{,}120{,}601\) triples, checking that it never fails, that it agrees
-with a re-statement of the specification in arbitrary-precision arithmetic,
-and that \(\Delta\bmod 4\in\{0,1\}\) for every triple
-(\S5.8). Table~\ref{tab:emp-classes} gives the resulting distribution.
-
-\begin{table}[H]
-\centering
-\caption{Output classes over the full domain \([-100,100]^3\)}
-\label{tab:emp-classes}
-\small
-\begin{tabular}{l r r}
-\toprule
-Output & Triples & Share \\
-\midrule
-TwoDistinctRealRoots & 5{,}055{,}984 & 62.26\,\% \\
-NoRealRoots & 3{,}023{,}112 & 37.23\,\% \\
-OneLinearRoot & 40{,}200 & 0.50\,\% \\
-OneRepeatedRealRoot & 1{,}104 & 0.0136\,\% \\
-NoSolution & 200 & 0.0025\,\% \\
-InfinitelyManySolutions & 1 & 0.00001\,\% \\
-\midrule
-Total & 8{,}120{,}601 & 100\,\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Two claims of Section~5 can now be stated quantitatively. First, the
-reachability argument of \S5.8 holds over the whole domain: among the 8{,}080{,}200
-quadratic triples (\(a\neq0\)), discriminants in \([-4,4]\) occur only as
-\(-4\) (338 triples), \(-3\) (252), \(0\) (1{,}104), \(1\) (1{,}880) and \(4\)
-(1{,}754); \(\Delta\in\{-2,-1,2,3\}\) never occurs. Second, the derived
-boundary \(\Delta=0\) occupies 1{,}104 of 8{,}080{,}200 quadratic triples
-(0.0137\,\%). A test selected uniformly at random from that set hits it with
-probability \(1.37\times10^{-4}\), so a random suite of 1{,}000 such tests
-contains no \(\Delta=0\) case with probability \(\approx0.87\), and would then
-kill neither N2 nor N3, which differ from the original only at \(\Delta=0\).
-This is the quantitative form of the argument in
-\S5.9 and \S7.2 that the derived boundary has to be constructed (Q5, Q7, Q8),
-not sampled.
-
-\subsection{Threats to Validity}
-\label{sec:emp-threats}
-
-The executable mutant models re-implement the same specification that the
-suites were designed from, so the matrix reproduction confirms that the
-hand derivation was carried out correctly under the stated readings; it does
-not test the specification itself. The arbitrary-precision oracle of
-\S\ref{sec:emp-exhaustive} uses the same formula as the implementation, so it
-detects overflow and branch-order errors but is not an independent check of
-the formula. Stryker's mutant population is generated by fixed operators on a
-short implementation (23 and 24 mutants) and is far smaller than the space of
-plausible faults, and the Microsoft Testing Platform runner of Stryker.NET
-was still marked as a preview at the time of the run; the per-test kill
-attribution in Table~\ref{tab:emp-stryker} is taken from its report. Timings
-come from a single machine and are indicative only.
-
-%=================================================================
 \section{Limitations}
 \label{sec:limitations}
 %=================================================================
 
 \begin{itemize}
-    \item The mutant-killing claims in Sections~4.12 and~5.12 (and
-    Appendices~D, H) were derived analytically; Section~\ref{sec:empirical}
-    confirms them by execution against one implementation written for this
-    report. A different implementation could deviate from the
+    \item The mutant-killing claims in Sections~4.12 and~5.12 were derived
+    analytically; \S\ref{sec:atm-exec} and \S\ref{sec:quad-exec} confirm
+    them by execution against one implementation written for this report. A different implementation could deviate from the
     specification in ways that this implementation does not exhibit.
     \item The mutant sets (M1--M14, N1--N10) were themselves designed to
     probe the boundaries already identified in Sections~4.8--4.9 and
@@ -2100,7 +2240,7 @@ come from a single machine and are indicative only.
     coverage is therefore, in part, a designed-in property of this
     boundary-first construction process, not an unbiased test of whether
     boundary tests are generally superior to interior ones. The
-    tool-generated mutants of Section~\ref{sec:emp-stryker} are a first
+    tool-generated mutants of \S\ref{sec:atm-exec} and \S\ref{sec:quad-exec} are a first
     population that the suites were not calibrated against, but they are
     few (23 and 24) and come from one short implementation; a fair
     comparison with interior or random suites would need larger,
@@ -2121,7 +2261,7 @@ come from a single machine and are indicative only.
     domain-edge boundary tests (\S5.8) are meaningful, not the discriminant
     analysis.
     \item Equivalence of M4 was argued in \S4.12 and checked by execution
-    over 20{,}300{,}001 amounts (Section~\ref{sec:emp-matrix}); for every
+    over 20{,}300{,}001 amounts (\S\ref{sec:atm-exec}); for every
     other mutant, kill status was established against the suite inputs
     only, first by substitution and then by execution. That a mutant is
     non-equivalent follows from the suite input that kills it, but no
@@ -2131,6 +2271,14 @@ come from a single machine and are indicative only.
     test the consistency of design, models and implementation with the
     stated specification, not the specification's adequacy for a real ATM
     or solver.
+    \item The arbitrary-precision oracle of the exhaustive sweep
+    (\S\ref{sec:quad-exec}) re-states the same formula as the
+    implementation, so it detects overflow and branch-order errors but is
+    not an independent check of the formula.
+    \item The Microsoft Testing Platform runner of Stryker.NET was marked as
+    a preview at the time of the run; the per-test kill attributions in
+    \S\ref{sec:atm-exec} and \S\ref{sec:quad-exec} are taken from its
+    reports. Timings come from a single machine and are indicative only.
 \end{itemize}
 
 %=================================================================
@@ -2173,7 +2321,7 @@ The implementation, all test code, the executable mutant models, the
 Stryker.NET configuration and the continuous-integration workflow that
 re-runs the tests and the mutation analysis are kept in the source
 repository accompanying this report and are available from the author on
-request. Section~\ref{sec:empirical} lists the tool versions used.
+request. \S\ref{sec:exec-method} lists the tool versions used.
 
 \section*{CRediT authorship contribution statement}
 
@@ -2189,7 +2337,8 @@ notes into an academic paper format, assist with the organization and
 drafting of the equivalence partitioning, boundary value analysis, and
 mutation testing sections, cross-check mathematical and test-design
 reasoning, and assist with language editing. For the empirical validation
-(Section~\ref{sec:empirical}), AI coding assistants (Claude, Anthropic, and
+(\S\ref{sec:exec-method}, \S\ref{sec:atm-exec}, \S\ref{sec:quad-exec}),
+AI coding assistants (Claude, Anthropic, and
 models accessed through the OpenCode agent) were used to help write the
 implementation, the test code, the executable mutant models and the
 continuous-integration configuration, and to run the test and mutation
@@ -2225,338 +2374,5 @@ International Software Testing Qualifications Board (ISTQB),
 \emph{Certified Tester Foundation Level Syllabus}, v4.0, 2023.
 
 \end{thebibliography}
-
-%=================================================================
-\appendix
-
-\section{ATM Complete Partition Definitions}
-
-{\small
-\begin{longtable}{p{2.2cm} p{7.2cm} p{1.7cm} p{2.7cm}}
-\caption{Complete ATM partition catalogue} \label{tab:app-atm-partitions}\\
-\toprule
-Partition ID & Mathematical definition & Valid / Invalid & Representative test \\
-\midrule
-\endfirsthead
-\toprule
-Partition ID & Mathematical definition & Valid / Invalid & Representative test \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
-$P_{a,1}$ & $\{x\in\mathbb{Z}\mid x<50{,}000\}$ & Invalid & TC-ATM-02 \\
-$P_{a,2}$ & $\{x\in\mathbb{Z}\mid 50{,}000\le x\le20{,}000{,}000\wedge x\equiv0\!\!\pmod{50{,}000}\}$ & Valid & TC-ATM-01 \\
-$P_{a,3}$ & $\{x\in\mathbb{Z}\mid 50{,}000\le x\le20{,}000{,}000\wedge x\not\equiv0\!\!\pmod{50{,}000}\}$ & Invalid & TC-ATM-07 \\
-$P_{a,4}$ & $\{x\in\mathbb{Z}\mid x>20{,}000{,}000\}$ & Invalid & TC-ATM-06 \\
-\(P_{\mathit{bal},1}\) & \(\{x\in\mathbb{Z}\mid x<\mathit{amount}+\mathit{fee}\}\) & Invalid & TC-ATM-08 \\
-\(P_{\mathit{bal},2}\) & \(\{x\in\mathbb{Z}\mid x\ge\mathit{amount}+\mathit{fee}\}\) & Valid & TC-ATM-09 \\
-\(P_{\mathit{dl},1}\) & \(\{(d,a)\mid d+a\le20{,}000{,}000\}\) & Valid & TC-ATM-11 \\
-\(P_{\mathit{dl},2}\) & \(\{(d,a)\mid d+a>20{,}000{,}000\}\) & Invalid & TC-ATM-12 \\
-\(P_{s,1}\) & \(\{\mathrm{Active}\}\) & Valid & TC-ATM-01 \\
-\(P_{s,2}\) & \(\{\mathrm{Frozen}\}\) & Invalid & TC-ATM-13 \\
-\(P_{i,1}\) & \(\{\mathrm{True}\}\) (fee\(=0\)) & Valid (numerically neutral) & TC-ATM-01 \\
-\(P_{i,2}\) & \(\{\mathrm{False}\}\) (fee\(=50{,}000\)) & Valid (numerically neutral) & TC-ATM-14 \\
-\end{longtable}
-}
-Every listed partition has at least one representative test in the suite
-(Appendix~C); completeness holds because every input value falls in exactly
-one listed class per input dimension, and the joint suite covers the
-Cartesian combinations identified in \S4.9.
-
-\section{ATM Complete Boundary Analysis}
-
-\begin{longtable}{p{1.8cm} p{4.2cm} p{1.6cm} p{2.2cm} p{3.6cm}}
-\caption{Complete ATM boundary catalogue} \label{tab:app-atm-boundaries}\\
-\toprule
-Boundary ID & Definition & Type & Covered by & Expected change \\
-\midrule
-\endfirsthead
-\toprule
-Boundary ID & Definition & Type & Covered by & Expected change \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
-B-amt-lo & \(\mathit{amount}=50{,}000\) & Input-domain & TC-ATM-02, -03 &
-Invalid\(\to\)valid-range \\
-B-amt-hi & \(\mathit{amount}=20{,}000{,}000\) & Input-domain & TC-ATM-05, -06 &
-Valid-range\(\to\)invalid \\
-B-amt-div & \(\mathit{amount}\bmod 50{,}000=0\) & Invalid/\allowbreak valid & TC-ATM-07 &
-Multiple\(\to\)non-multiple \\
-B-bal & \(\mathit{balance}=\mathit{amount}+\mathit{fee}\) & Derived & TC-ATM-08,
--09, C1/C2 & Rejected\(\to\)Approved \\
-B-daily & \(\mathit{dailyUsed}+\mathit{amount}=20{,}000{,}000\) & Derived &
-TC-ATM-10, -11, -12 & Approved \(\to\) Rejected\_\allowbreak DailyLimit \\
-B-status & \(\mathrm{Active}\leftrightarrow\mathrm{Frozen}\) & Logical &
-TC-ATM-13 & Any \(\to\) Rejected\_\allowbreak InvalidAccount \\
-B-fee & \(\mathit{isInternal}\) True\(\leftrightarrow\)False & Multi-variable
-interaction & TC-ATM-14, C5 & Approved \(\leftrightarrow\) Rejected\_\allowbreak InsufficientBalance \\
-B-multi1 & B-bal \(\wedge\) B-daily simultaneously & Multi-variable
-interaction & TC-ATM-15/16, C3/C4 & Confirms precedence order (R3/R5) \\
-B-fee-hi & \(\mathit{balance}=\mathit{amount}+100{,}000\) (overcharge
-threshold) & Multi-variable interaction & TC-ATM-21, C8 & Isolates the
-External-Approved path; distinguishes correct fee from an overcharging one \\
-B-multi2 & R1 \(\wedge\) R2 simultaneously invalid & Multi-variable
-interaction & TC-ATM-22, C9 & Confirms precedence order (R1/R2) \\
-B-out & 5-way \(D_{out}\) partition & Output & entire suite & Every rejection
-reason is individually reachable \\
-\end{longtable}
-
-\section{ATM Complete Test Suite}
-
-The complete, non-redundant ATM suite is the twenty-two tests TC-ATM-01
-through TC-ATM-22 derived in \S4.10 (Table~\ref{tab:atm-suite-sample}); no
-test beyond these twenty-two was retained after redundancy elimination, and
-every partition (Appendix~A) and boundary (Appendix~B) has a listed
-representative
-within this set. It is reprinted here in full, in inputs-and-output form,
-for direct reference.
-
-\begin{longtable}{l L{7.5cm} L{5cm}}
-\caption{Complete ATM test suite: inputs (balance / dailyUsed / amount /
-status / internal) and expected output} \label{tab:app-atm-suite}\\
-\toprule
-ID & Inputs & Expected output \\
-\midrule
-\endfirsthead
-\toprule
-ID & Inputs & Expected output \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
-TC-ATM-01 & 1{,}000{,}000 / 0 / 500{,}000 / Active / True & Approved \\
-TC-ATM-02 & 1{,}000{,}000 / 0 / 49{,}999 / Active / True & Rejected\_InvalidAmount \\
-TC-ATM-03 & 50{,}000 / 0 / 50{,}000 / Active / True & Approved \\
-TC-ATM-04 & 50{,}001 / 0 / 50{,}000 / Active / True & Approved \\
-TC-ATM-05 & 20{,}000{,}000 / 0 / 20{,}000{,}000 / Active / True & Approved \\
-TC-ATM-06 & 1{,}000{,}000 / 0 / 20{,}050{,}000 / Active / True & Rejected\_InvalidAmount \\
-TC-ATM-07 & 1{,}000{,}000 / 0 / 50{,}001 / Active / True & Rejected\_InvalidAmount \\
-TC-ATM-08 & 499{,}999 / 0 / 500{,}000 / Active / True & Rejected\_InsufficientBalance \\
-TC-ATM-09 & 500{,}000 / 0 / 500{,}000 / Active / True & Approved \\
-TC-ATM-10 & 1{,}000{,}000 / 19{,}499{,}999 / 500{,}000 / Active / True & Approved \\
-TC-ATM-11 & 1{,}000{,}000 / 19{,}500{,}000 / 500{,}000 / Active / True & Approved \\
-TC-ATM-12 & 1{,}000{,}000 / 19{,}500{,}001 / 500{,}000 / Active / True & Rejected\_DailyLimit \\
-TC-ATM-13 & 1{,}000{,}000 / 0 / 500{,}000 / Frozen / True & Rejected\_InvalidAccount \\
-TC-ATM-14 & 500{,}000 / 0 / 500{,}000 / Active / False & Rejected\_InsufficientBalance \\
-TC-ATM-15 & 500{,}000 / 19{,}500{,}000 / 500{,}000 / Active / True & Approved \\
-TC-ATM-16 & 499{,}999 / 19{,}500{,}001 / 500{,}000 / Active / True & Rejected\_DailyLimit \\
-TC-ATM-17 & \(-100\) / 0 / 500{,}000 / Active / True & Rejected\_InsufficientBalance \\
-TC-ATM-18 & 1{,}000{,}000 / 0 / 60{,}000 / Active / True & Rejected\_InvalidAmount \\
-TC-ATM-19 & 520{,}000 / 0 / 500{,}000 / Active / False & Rejected\_InsufficientBalance \\
-TC-ATM-20 & 1{,}000{,}000 / 0 / 0 / Active / True & Rejected\_InvalidAmount \\
-TC-ATM-21 & 580{,}000 / 0 / 500{,}000 / Active / False & Approved \\
-TC-ATM-22 & 1{,}000{,}000 / 0 / 49{,}999 / Frozen / True & Rejected\_InvalidAccount \\
-\end{longtable}
-Partition, boundary, combination, and rationale columns for every test above
-are given in full in Table~\ref{tab:atm-suite-sample} (\S4.10); they are not
-repeated verbatim here purely to avoid a second full-width table, but every
-value in this appendix is identical to, and was computed alongside, that
-table.
-
-\section{ATM Mutation Matrix}
-
-The complete ATM Test\(\times\)Mutant matrix, covering all fourteen mutants
-M1--M14 against all twenty-two tests TC-ATM-01 through TC-ATM-22, is
-reprinted below. It is identical to Table~\ref{tab:atm-matrix} (\S4.12); M4
-is the one equivalent mutant (\S4.12) and is excluded from the
-non-equivalent denominator of the mutation-score definition in \S2.5. All
-entries are analytically derived; their executed reproduction is reported
-in Section~\ref{sec:emp-matrix}.
-
-\setlength{\tabcolsep}{3pt}
-\begin{longtable}{lcccccccccccccc}
-\caption{Complete ATM Test\(\times\)Mutant matrix} \label{tab:app-atm-matrix}\\
-\toprule
-Test & M1 & M2 & M3 & M4 & M5 & M6 & M7 & M8 & M9 & M10 & M11 & M12 & M13 & M14 \\
-\midrule
-\endfirsthead
-\toprule
-Test & M1 & M2 & M3 & M4 & M5 & M6 & M7 & M8 & M9 & M10 & M11 & M12 & M13 & M14 \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
-TC-ATM-01 & S & S & S & S & S & S & S & S & K & S & S & S & S & S \\
-TC-ATM-02 & -- & -- & S & S & K & -- & -- & S & K & S & -- & -- & -- & S \\
-TC-ATM-03 & K & S & S & S & S & S & S & S & K & S & S & S & S & S \\
-TC-ATM-04 & S & S & S & S & S & S & S & S & K & S & S & S & S & S \\
-TC-ATM-05 & K & K & K & S & S & S & S & S & K & S & S & S & S & S \\
-TC-ATM-06 & -- & -- & S & S & K & -- & -- & S & K & S & -- & -- & -- & S \\
-TC-ATM-07 & -- & -- & S & S & K & -- & -- & S & K & S & -- & -- & -- & S \\
-TC-ATM-08 & S & S & S & S & S & S & S & S & K & S & S & S & S & S \\
-TC-ATM-09 & K & S & S & S & S & S & S & S & K & S & S & S & S & S \\
-TC-ATM-10 & S & S & S & S & S & S & S & S & K & S & S & S & S & S \\
-TC-ATM-11 & S & K & S & S & S & S & S & S & K & S & S & S & S & S \\
-TC-ATM-12 & -- & S & S & S & S & -- & -- & S & K & S & S & K & -- & S \\
-TC-ATM-13 & -- & -- & -- & -- & K & -- & -- & -- & K & -- & -- & -- & -- & S \\
-TC-ATM-14 & S & S & S & S & S & K & S & S & K & S & S & S & S & S \\
-TC-ATM-15 & K & K & S & S & S & S & S & S & K & S & S & S & S & S \\
-TC-ATM-16 & -- & S & S & S & S & -- & -- & S & K & S & K & K & -- & S \\
-TC-ATM-17 & S & S & S & S & S & S & S & S & K & S & S & S & S & S \\
-TC-ATM-18 & -- & -- & S & S & K & -- & -- & K & K & S & -- & -- & -- & S \\
-TC-ATM-19 & S & S & S & S & S & K & K & S & K & S & S & S & S & S \\
-TC-ATM-20 & -- & -- & S & S & K & -- & -- & S & K & K & -- & -- & -- & S \\
-TC-ATM-21 & S & S & S & S & S & S & S & S & K & S & S & S & K & S \\
-TC-ATM-22 & -- & -- & -- & -- & S & -- & -- & -- & K & -- & -- & -- & -- & K \\
-\end{longtable}
-\setlength{\tabcolsep}{6pt}
-
-\section{Quadratic Equation Complete Partition Definitions}
-
-{\small
-\begin{longtable}{p{2.4cm} p{7.0cm} p{1.6cm} p{2.5cm}}
-\caption{Complete quadratic partition catalogue} \label{tab:app-quad-partitions}\\
-\toprule
-Partition ID & Mathematical definition & Valid / Invalid & Representative test \\
-\midrule
-\endfirsthead
-\toprule
-Partition ID & Mathematical definition & Valid / Invalid & Representative test \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
-\(P_{a^-}\) & \(\{a\in D_a\mid a<0\}\) & Valid (all inputs valid) & TC-QE-10 \\
-\(P_{a^0}\) & \(\{a\in D_a\mid a=0\}\) & Valid & TC-QE-04, -05, -06 \\
-\(P_{a^+}\) & \(\{a\in D_a\mid a>0\}\) & Valid & TC-QE-01 \\
-\(P_{\Delta^-}\) & \(\{(a,b,c)\in D\mid a\ne0,\Delta<0\}\) & Valid & TC-QE-03 \\
-\(P_{\Delta^0}\) & \(\{(a,b,c)\in D\mid a\ne0,\Delta=0\}\) & Valid & TC-QE-02 \\
-\(P_{\Delta^+}\) & $\{(a,b,c)\in D\mid a\ne0,\Delta>0\}$ & Valid & TC-QE-01 \\
-\(P_{b\ne0}\) & \(\{(0,b,c)\in D\mid b\ne0\}\) & Valid & TC-QE-04 \\
-\(P_{b0,c\ne0}\) & \(\{(0,0,c)\in D\mid c\ne0\}\) & Valid & TC-QE-05 \\
-\(P_{b0,c0}\) & \(\{(0,0,0)\}\) & Valid & TC-QE-06 \\
-\end{longtable}
-}
-Since every \((a,b,c)\in D\) is legitimate input to a mathematical classifier,
-all listed partitions are ``valid'' in the invalid-input sense (there is no
-malformed-input class); the valid/invalid column instead confirms the
-partitioning is exhaustive over \(D\) with no gap.
-
-\section{Quadratic Equation Complete Boundary Analysis}
-
-\begin{longtable}{p{1.8cm} p{4.0cm} p{1.6cm} p{2.2cm} p{3.8cm}}
-\caption{Complete quadratic boundary catalogue} \label{tab:app-quad-boundaries}\\
-\toprule
-Boundary ID & Definition & Type & Covered by & Expected change \\
-\midrule
-\endfirsthead
-\toprule
-Boundary ID & Definition & Type & Covered by & Expected change \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
-B-a0 & \(a=0\) & Logical (case split) & TC-QE-04,-05,-06 vs.\ TC-QE-01,-02,-03 &
-Quadratic algorithm \(\to\) linear algorithm \\
-B-delta & \(\Delta=b^2-4ac=0\) & Derived & TC-QE-02, -08 (middle), -09 &
-NoRealRoots/\allowbreak TwoDistinct \(\to\) OneRepeated \\
-B-b0-nested & \(b=0\) (given \(a=0\)) & Multi-variable interaction (nested) &
-TC-QE-05 vs.\ TC-QE-04 & OneLinearRoot \(\to\) \{NoSolution, InfiniteMany\} \\
-B-c0-nested & \(c=0\) (given \(a=0,b=0\)) & Multi-variable interaction (nested) &
-TC-QE-06 vs.\ TC-QE-05 & NoSolution \(\to\) Infinitely\allowbreak ManySolutions \\
-B-adom & \(a\in\{-100,100\}\) & Input-domain & TC-QE-11, -12 & No branch
-change; extreme-magnitude sanity \\
-B-bdom & \(b\in\{-100,100\}\) & Input-domain & TC-QE-13, -14 & No branch
-change (quadratic branch); gates branch only under \(a=0\) \\
-B-reach & Nearest reachable \(\Delta\) to $0$ (\(-3,+1\) vs.\ unreachable
-\(-1,-2\)) & Derived (discrete-domain) & TC-QE-03, -07 & Confirms BVA
-neighbour selection is reachability-checked \\
-B-cross & \(\Delta\) crossing \(-3\to0\to5\) via \(b\) alone (\(a=1,c=1\) fixed) &
-Multi-variable interaction & TC-QE-08 (Q7) & Full qualitative-change
-demonstration \\
-\end{longtable}
-
-\section{Quadratic Equation Complete Test Suite}
-
-The complete, non-redundant quadratic suite is the sixteen tests TC-QE-01
-through TC-QE-16 derived in \S5.10 (Table~\ref{tab:quad-suite-sample});
-TC-QE-08 is one traceability entry that internally exercises three
-coefficient tuples (the crossing sequence of Q7). It is reprinted here in
-full for direct reference.
-
-\begin{longtable}{l L{5.5cm} L{6cm}}
-\caption{Complete quadratic test suite: coefficients \((a,b,c)\) and expected
-output} \label{tab:app-quad-suite}\\
-\toprule
-ID & \((a,b,c)\) & Expected output \\
-\midrule
-\endfirsthead
-\toprule
-ID & \((a,b,c)\) & Expected output \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
-TC-QE-01 & \((1,7,6)\) & TwoDistinctRealRoots \\
-TC-QE-02 & \((1,2,1)\) & OneRepeatedRealRoot \\
-TC-QE-03 & \((1,1,1)\) & NoRealRoots \\
-TC-QE-04 & \((0,2,-4)\) & OneLinearRoot \\
-TC-QE-05 & \((0,0,5)\) & NoSolution \\
-TC-QE-06 & \((0,0,0)\) & InfinitelyManySolutions \\
-TC-QE-07 & \((1,3,2)\) & TwoDistinctRealRoots \\
-TC-QE-08 & \((1,1,1)\to(1,2,1)\to(1,3,1)\) & NoRealRoots \(\to\) OneRepeatedRealRoot \(\to\) TwoDistinctRealRoots \\
-TC-QE-09 & \((2,4,2)\) & OneRepeatedRealRoot \\
-TC-QE-10 & \((-1,0,1)\) & TwoDistinctRealRoots \\
-TC-QE-11 & \((100,1,1)\) & NoRealRoots \\
-TC-QE-12 & \((-100,1,1)\) & TwoDistinctRealRoots \\
-TC-QE-13 & \((1,100,1)\) & TwoDistinctRealRoots \\
-TC-QE-14 & \((0,100,0)\) & OneLinearRoot \\
-TC-QE-15 & \((1,0,1)\) & NoRealRoots \\
-TC-QE-16 & \((1,1,10)\) & NoRealRoots \\
-\end{longtable}
-Partition, boundary, combination, and rationale columns for every test above
-are given in full in Table~\ref{tab:quad-suite-sample} (\S5.10); every value
-in this appendix is identical to, and was computed alongside, that table.
-
-\section{Quadratic Equation Mutation Matrix}
-
-The complete quadratic Test\(\times\)Mutant matrix, covering all ten mutants
-N1--N10 against all sixteen tests TC-QE-01 through TC-QE-16, is reprinted
-below. It is identical to Table~\ref{tab:quad-matrix} (\S5.12); every entry
-was obtained by direct substitution of each test's coefficients into both
-the original and the mutated classification rule, and all entries are
-analytically derived; their executed reproduction is reported in
-Section~\ref{sec:emp-matrix}.
-
-\setlength{\tabcolsep}{5pt}
-\begin{longtable}{lcccccccccc}
-\caption{Complete quadratic Test\(\times\)Mutant matrix} \label{tab:app-quad-matrix}\\
-\toprule
-Test & N1 & N2 & N3 & N4 & N5 & N6 & N7 & N8 & N9 & N10 \\
-\midrule
-\endfirsthead
-\toprule
-Test & N1 & N2 & N3 & N4 & N5 & N6 & N7 & N8 & N9 & N10 \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
-TC-QE-01 & S & S & S & K & K & K & -- & -- & -- & K \\
-TC-QE-02 & K & K & K & K & S & S & -- & -- & -- & K \\
-TC-QE-03 & S & S & S & K & K & S & -- & -- & -- & S \\
-TC-QE-04 & -- & -- & -- & K & -- & -- & -- & -- & K & -- \\
-TC-QE-05 & -- & -- & -- & K & -- & -- & -- & K & -- & -- \\
-TC-QE-06 & -- & -- & -- & K & -- & -- & K & -- & -- & -- \\
-TC-QE-07 & S & S & S & K & K & K & -- & -- & -- & K \\
-TC-QE-08 & K & K & K & K & K & S & -- & -- & -- & K \\
-TC-QE-09 & K & K & K & K & S & K & -- & -- & -- & K \\
-TC-QE-10 & S & S & S & K & K & S & -- & -- & -- & K \\
-TC-QE-11 & S & S & S & K & K & S & -- & -- & -- & S \\
-TC-QE-12 & S & S & S & K & K & S & -- & -- & -- & K \\
-TC-QE-13 & S & S & S & K & K & S & -- & -- & -- & S \\
-TC-QE-14 & -- & -- & -- & K & -- & -- & -- & -- & K & -- \\
-TC-QE-15 & S & S & S & K & K & S & -- & -- & -- & K \\
-TC-QE-16 & S & S & S & K & K & S & -- & -- & -- & S \\
-\end{longtable}
-\setlength{\tabcolsep}{6pt}
-
-Of the ten mutants, none is equivalent: each of N1--N10 is killed by at
-least one test above, so, per the mutation-score definition in \S2.5, the
-suite achieves full (\(10/10\)) analytically expected coverage of the
-non-equivalent quadratic mutants -- again a statement about the suite's
-design against the specification. The executed reproduction and a
-tool-measured score are reported in Section~\ref{sec:empirical}.
-
 
 \end{document}

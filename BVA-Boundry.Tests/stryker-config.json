@@ -1,0 +1,8 @@
+{
+  "stryker-config": {
+    "project": "BVA-Boundry.csproj",
+    "test-runner": "mtp",
+    "reporters": ["progress", "html", "json"],
+    "thresholds": { "high": 100, "low": 90, "break": 90 }
+  }
+}

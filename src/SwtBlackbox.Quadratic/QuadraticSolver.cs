@@ -36,12 +36,13 @@ public static class QuadraticSolver
             return c != 0 ? QuadraticResult.NoSolution : QuadraticResult.InfinitelyManySolutions;
         }
 
+        // Kept as if-statements rather than a relational-pattern switch: mutating "< 0" to "<= 0" in a
+        // switch makes the discard arm unreachable (compile error), so Stryker could not test the Δ = 0 boundary.
         var delta = Discriminant(a, b, c);
-        return delta switch
-        {
-            < 0 => QuadraticResult.NoRealRoots,
-            > 0 => QuadraticResult.TwoDistinctRealRoots,
-            _ => QuadraticResult.OneRepeatedRealRoot
-        };
+        if (delta < 0)
+            return QuadraticResult.NoRealRoots;
+        if (delta > 0)
+            return QuadraticResult.TwoDistinctRealRoots;
+        return QuadraticResult.OneRepeatedRealRoot;
     }
 }

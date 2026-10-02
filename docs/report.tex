@@ -75,15 +75,19 @@ are structurally different but methodologically comparable:
     the discriminant \(\Delta = b^2-4ac\).
 \end{enumerate}
 
-The report is a \textbf{test-design document}. No ATM software, no equation
-solver, and no unit-test code are implemented. Every artifact below --
-partitions, boundaries, test cases, mutants -- is derived analytically from
-the stated specification. Where mutation killing is discussed, it is
-explicitly labelled as an \emph{analytically expected} outcome (reasoned from
-the mutant's semantics and the test's expected output), never as an
-experimentally measured mutation score, because no mutation-testing tool was
-executed. This distinction is maintained throughout Sections~4, 5, and the
-appendices.
+The report is first a \textbf{test-design document}. Every artifact in
+Sections~4 and~5 -- partitions, boundaries, test cases, mutants -- is derived
+analytically from the stated specification, and where mutation killing is
+discussed there it is explicitly labelled as an \emph{analytically expected}
+outcome (reasoned from the mutant's semantics and the test's expected
+output). Section~\ref{sec:empirical} then reports a second, empirical phase:
+both specifications were implemented, every designed test case was executed
+against the implementation, the two analytically derived mutation matrices
+were re-computed by executing mutant models, and an automated mutation tool
+was run to obtain a measured mutation score. Analytical claims and measured
+results are kept separate: Sections~4, 5 and the appendices retain the
+analytical labelling, and every measured number appears in
+Section~\ref{sec:empirical}.
 
 The guiding question behind every test case in this report is:
 
@@ -98,8 +102,9 @@ groundwork; Section~3 describes the methodology (the pipeline from
 specification to mutation analysis) in the abstract; Sections~4 and~5 apply it
 concretely to the two case studies; Section~6 compares them; Section~7
 discusses the broader lessons, including why single-variable testing
-under-covers interacting systems; Section~8 states
-limitations; Section~9 concludes. The appendices contain the complete,
+under-covers interacting systems; Section~\ref{sec:empirical} reports the
+executed validation; Section~\ref{sec:limitations} states limitations;
+Section~\ref{sec:conclusion} concludes. The appendices contain the complete,
 unabridged partition tables, boundary tables, test suites, and mutation
 matrices for both case studies.
 
@@ -194,11 +199,11 @@ defined as
 An \emph{equivalent mutant} is one that, despite being syntactically
 different, is semantically identical to the original for every input in the
 domain (no test can ever kill it, and it must be excluded from the score's
-denominator). This report treats all mutant-killing claims as
+denominator). Sections~4 and~5 treat all mutant-killing claims as
 \textbf{analytically expected}, derived from reasoning about the mutant's
-semantics against each test's specified expected output; it never reports a
-mutation score as an experimentally measured number, since no mutation
-execution was performed.
+semantics against each test's specified expected output; measured mutation
+results, obtained by executing the mutants, are reported separately in
+Section~\ref{sec:empirical}.
 
 %=================================================================
 \section{Methodology}
@@ -945,9 +950,10 @@ swapped) & Control-flow reordering & Multi-failure precedence (status/amount) \\
 Table~\ref{tab:atm-matrix} reports \textbf{analytically expected} killing:
 for each (test, mutant) pair, whether the mutant's specification-implied
 output for that test's input differs from the original specification's
-expected output. No mutation tool was run; \texttt{K} means ``this test's
-input makes the mutant compute a different result than the original,'' not
-an observed run.
+expected output. \texttt{K} means ``this test's input makes the mutant
+compute a different result than the original,'' derived by hand; the matrix
+was afterwards re-computed by executing the mutants and matched cell for
+cell (Section~\ref{sec:emp-matrix}).
 
 Every cell below was obtained by substituting the test's five input values
 into both the original rule set (\S4.2) and the mutated rule set, evaluating
@@ -1082,10 +1088,12 @@ mutation-score definition in \S2.5. All thirteen remaining mutants
 suite, so, restricted to those thirteen non-equivalent mutants, this
 analytically expected matrix supports full (\(13/13\)) expected coverage;
 this is a claim about the \emph{design} of the suite against the stated
-specification, not a measured mutation score from an executed tool, and
-(per \S8) the mutant set was itself constructed with knowledge of the
-suite's boundaries, so this full coverage should not be read as unbiased
-evidence that boundary tests generally dominate interior ones.
+specification (its executed confirmation and a tool-measured score on an
+independent mutant population are reported in
+Section~\ref{sec:empirical}), and (per Section~\ref{sec:limitations}) the
+mutant set was itself constructed with knowledge of the suite's boundaries,
+so this full coverage should not be read as unbiased evidence that boundary
+tests generally dominate interior ones.
 
 \subsection{Case Study Discussion}
 
@@ -1795,10 +1803,11 @@ boundaries in general}, not an artifact of either problem.
 Both mutation matrices (\S4.12, \S5.12) show the same pattern: mutants that
 alter behaviour only exactly at an equality boundary (\(\Delta=0\), or
 \(\mathit{balance}=T\)) are killed exclusively by the corresponding boundary
-test and survive every interior test. This is direct, if analytical rather
-than experimental, evidence for BVA's central premise -- that boundary tests
-are not merely \emph{additional} coverage but carry fault-detection power
-that interior tests structurally cannot provide for this class of fault.
+test and survive every interior test. Derived analytically in Sections~4
+and~5 and reproduced by execution in Section~\ref{sec:emp-matrix}, this is
+direct evidence for BVA's central premise -- that boundary tests are not
+merely \emph{additional} coverage but carry fault-detection power that
+interior tests structurally cannot provide for this class of fault.
 
 \subsection{Why Boundary-Focused Testing Works: A Summary}
 
@@ -1850,24 +1859,237 @@ only samples values far from every boundary can never observe one of these
 flips, because by construction no flip occurs there; only a test placed at
 or straddling the exact transition point can. This is offered as the
 summary intuition behind BVA's emphasis on boundaries, not as an
-independent proof of it: the analytically expected mutation matrices in
-\S4.12 and \S5.12 are consistent with it (mutants that only misbehave
-exactly at an equality boundary are killed exclusively by boundary tests),
-but, as \S8 notes, the mutant set analysed here was itself chosen to probe
+independent proof of it: the mutation matrices in \S4.12 and \S5.12
+(analytically derived, then reproduced by execution in
+Section~\ref{sec:emp-matrix}) are consistent with it (mutants that only
+misbehave exactly at an equality boundary are killed exclusively by
+boundary tests), but, as Section~\ref{sec:limitations} notes, the mutant set
+analysed here was itself chosen to probe
 those same boundaries, so this consistency should be read as an
 illustration of the pattern, not as independent, unbiased evidence for it.
 
 %=================================================================
+\section{Empirical Validation}
+\label{sec:empirical}
+%=================================================================
+
+Sections~4 and~5 derive every test case and every mutant-killing claim
+analytically. This section reports the second phase: both specifications
+were implemented, the designed suites were executed against the
+implementations, the two Test\(\times\)Mutant matrices were re-computed by
+executing the mutants, and an automated mutation tool was applied to obtain a
+measured mutation score on a mutant population that was \emph{not} designed
+alongside the suites. All numbers below come from the reports produced by
+one end-to-end run (2~October~2026); none is estimated.
+
+\subsection{Implementation and Test Harness}
+\label{sec:emp-setup}
+
+Both functions were implemented in C\# on .NET~10 (SDK 10.0.401, runtime
+10.0.12, Windows~11): \texttt{AtmService.Withdraw} evaluates R1\(\to\)R2\(\to\)R3\(\to\)R5
+and returns the first failing rule; \texttt{QuadraticSolver.Solve}
+implements Cases~A and~B of \S5.2. The specification leaves input outside
+the modelled domain open, so two implementation decisions were made and are
+tested explicitly: \(\mathit{dailyUsed}<0\) (excluded from the domain in
+\S4.2) and coefficients outside \([-100,100]\) (\S5.2) raise an
+argument-range error instead of returning an element of \(D_{out}\); the
+\(\mathit{dailyUsed}\) check runs before R1. R3 is evaluated in the
+rearranged form \(\mathit{dailyUsed}>20{,}000{,}000-\mathit{amount}\), which
+is equivalent to the stated rule but cannot overflow for large
+\(\mathit{dailyUsed}\); the report's specification does not address
+overflow, and a direct sum would wrap for values near the top of the
+integer range.
+
+Tests were written with xUnit.net~v3 (4.0.1) on the Microsoft Testing
+Platform, property-based tests with FsCheck~3.4.0, and mutation testing used
+Stryker.NET~5.0.0\footnote{\url{https://stryker-mutator.io}}. Each test case of
+Tables~\ref{tab:atm-suite-sample} and~\ref{tab:quad-suite-sample} is one
+data row carrying its paper identifier and its partition, boundary and
+combination columns as test metadata, so a run can be filtered by, e.g.,
+combination C9 alone. Table~\ref{tab:emp-layers} lists the test layers.
+
+\begin{table}[H]
+\centering
+\caption{Executed test layers and results (all tests passed)}
+\label{tab:emp-layers}
+\small
+\begin{tabularx}{\textwidth}{l Y r r}
+\toprule
+Layer & Purpose & ATM & Quadratic \\
+\midrule
+Paper suite & TC-ATM-01--22, TC-QE-01--16 (TC-QE-08 as two sequence checks) & 22 & 17 \\
+Supplementary boundaries & Values named but not retained in \S4.8/\S5.8, domain guards, overflow, undefined status & 18 & 26 \\
+Mutation-matrix checks & Executable mutants M1--M14 / N1--N10 against the paper suites (\S\ref{sec:emp-matrix}) & 39 & 28 \\
+Properties (FsCheck) & Invariants and metamorphic relations, 1{,}000 / 2{,}000 generated cases each & 8 & 6 \\
+Exhaustive sweep & Every \((a,b,c)\in[-100,100]^3\) (\S\ref{sec:emp-exhaustive}) & -- & 2 \\
+\midrule
+Total & & 87 & 79 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+All 166 tests passed in a clean Release build compiled with warnings treated
+as errors; each test project completed in under one second of wall-clock
+time (0.48~s for ATM, 0.55~s for the quadratic project, including the
+8.1-million-triple sweep).
+
+\subsection{Executed Reproduction of the Mutation Matrices}
+\label{sec:emp-matrix}
+
+Each mutant of Tables~\ref{tab:atm-mutants} and~\ref{tab:quad-mutants} was
+implemented in an executable reference model of the specification that can
+inject exactly one mutant. The model was first checked against the
+specification and the implementation on every suite row (both agree with the
+expected outputs of Appendices~C and~G). For each mutant, the set of suite
+tests whose output differs from the unmutated model was then computed and
+compared with the set of \texttt{K} cells in that mutant's column of
+Table~\ref{tab:atm-matrix} or Table~\ref{tab:quad-matrix}, transcribed
+verbatim.
+
+\textbf{Result.} All 24 columns matched exactly: every \texttt{K} cell of
+both matrices is reproduced, and no test kills a mutant that the matrices
+mark \texttt{S} or \texttt{--}. The executed scores are therefore \(13/13\)
+non-equivalent ATM mutants and \(10/10\) quadratic mutants, as derived
+analytically. The equivalence of M4 (\S4.12) was additionally checked by
+executing the original and M4 for every integer amount in
+\([-100{,}000,\ 20{,}200{,}000]\) (20{,}300{,}001 values, all other rules
+passing); no output differed.
+
+The reproduction depends on two readings of mutant semantics that the tables
+state only informally, and it should be read with them in mind. For M5
+(\(\mathrm{R1}\wedge\mathrm{R2}\to\mathrm{R1}\vee\mathrm{R2}\)), a single
+failure of R1 or R2 lets evaluation continue to R3 and R5, while a double
+failure is reported as Rejected\_InvalidAccount (R1 first); this is the
+reading under which TC-ATM-22 survives M5, as Table~\ref{tab:atm-matrix}
+states. For N2 and N3, the classifier tests \(\Delta<0\) first, then
+\(\Delta>0\), and returns OneRepeatedRealRoot otherwise; this is the order
+under which both relational mutants misclassify exactly the \(\Delta=0\)
+tests.
+
+\subsection{Tool-Generated Mutants (Stryker.NET)}
+\label{sec:emp-stryker}
+
+The mutants of \S4.11 and \S5.11 were designed together with the suites
+(Section~\ref{sec:limitations}). As an independent check, Stryker.NET
+generated mutants from the implementation's source code with its standard
+operators; Table~\ref{tab:emp-stryker} summarises the reports.
+
+\begin{table}[H]
+\centering
+\caption{Stryker.NET results on the implementation (full test suite)}
+\label{tab:emp-stryker}
+\small
+\begin{tabularx}{\textwidth}{L{4.2cm} Y Y}
+\toprule
+ & ATM & Quadratic \\
+\midrule
+Mutants generated & 23 & 24 \\
+Ignored by Stryker (redundant block removal) & 1 & 3 \\
+Killed / survived & 22 / 0 & 21 / 0 \\
+Measured mutation score & 100\,\% & 100\,\% \\
+Operators (killed) & equality 10, conditional 4, arithmetic 3, logical 2, negation 2, statement 1 &
+equality 7, statement 6, arithmetic 4, conditional 2, negation 2 \\
+Killed by paper-suite tests & 21 of 22 & 15 of 21 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Two observations follow from the per-mutant data. First, every tool-generated
+mutant that the paper suites do not kill removes an input-domain guard (the
+\(\mathit{dailyUsed}\ge0\) check; the six coefficient-range checks). These
+inputs lie outside the domains defined in \S4.2 and \S5.2, so by
+construction no paper test can reach them; they are killed only by the
+supplementary guard tests. Every mutant inside the modelled domain, including
+the relational mutants Stryker places on \(\mathit{balance}<T\),
+\(\mathit{dailyUsed}>20{,}000{,}000-\mathit{amount}\), and \(\Delta<0\) /
+\(\Delta>0\), is killed by the paper suites. Second, the \(\Delta=0\)
+relational mutants (\(\Delta<0\to\Delta\le0\), \(\Delta>0\to\Delta\ge0\),
+the tool-generated counterparts of N3 and N2) were killed by the paper-suite
+tests and by the executable matrix checks, consistent with \S5.12.
+
+The run also exposed a practical hazard. In an earlier version of the
+implementation the sign of \(\Delta\) was classified with a relational
+pattern match (\texttt{< 0}, \texttt{> 0}, default). Stryker's boundary
+mutants of that form (\texttt{<= 0}, \texttt{>= 0}) make the default arm
+unreachable, which the C\# compiler rejects, so four mutants were reported
+as compile errors and excluded from the score. The reported score was still
+100\,\%, yet it no longer covered the \(\Delta=0\) boundary at all. With the
+equivalent if-statement form those four mutants compile and are killed. A
+measured mutation score is thus only as informative as the set of mutants
+the tool manages to compile, and the excluded mutants need to be inspected,
+not only the score.
+
+\subsection{Exhaustive Evidence for the Quadratic Domain}
+\label{sec:emp-exhaustive}
+
+Because \(D\) is finite, the classifier was executed on all
+\(201^3=8{,}120{,}601\) triples, checking that it never fails, that it agrees
+with a re-statement of the specification in arbitrary-precision arithmetic,
+and that \(\Delta\bmod 4\in\{0,1\}\) for every triple
+(\S5.8). Table~\ref{tab:emp-classes} gives the resulting distribution.
+
+\begin{table}[H]
+\centering
+\caption{Output classes over the full domain \([-100,100]^3\)}
+\label{tab:emp-classes}
+\small
+\begin{tabular}{l r r}
+\toprule
+Output & Triples & Share \\
+\midrule
+TwoDistinctRealRoots & 5{,}055{,}984 & 62.26\,\% \\
+NoRealRoots & 3{,}023{,}112 & 37.23\,\% \\
+OneLinearRoot & 40{,}200 & 0.50\,\% \\
+OneRepeatedRealRoot & 1{,}104 & 0.0136\,\% \\
+NoSolution & 200 & 0.0025\,\% \\
+InfinitelyManySolutions & 1 & 0.00001\,\% \\
+\midrule
+Total & 8{,}120{,}601 & 100\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two claims of Section~5 can now be stated quantitatively. First, the
+reachability argument of \S5.8 holds over the whole domain: among the 8{,}080{,}200
+quadratic triples (\(a\neq0\)), discriminants in \([-4,4]\) occur only as
+\(-4\) (338 triples), \(-3\) (252), \(0\) (1{,}104), \(1\) (1{,}880) and \(4\)
+(1{,}754); \(\Delta\in\{-2,-1,2,3\}\) never occurs. Second, the derived
+boundary \(\Delta=0\) occupies 1{,}104 of 8{,}080{,}200 quadratic triples
+(0.0137\,\%). A test selected uniformly at random from that set hits it with
+probability \(1.37\times10^{-4}\), so a random suite of 1{,}000 such tests
+contains no \(\Delta=0\) case with probability \(\approx0.87\), and would then
+kill neither N2 nor N3, which differ from the original only at \(\Delta=0\).
+This is the quantitative form of the argument in
+\S5.9 and \S7.2 that the derived boundary has to be constructed (Q5, Q7, Q8),
+not sampled.
+
+\subsection{Threats to Validity}
+\label{sec:emp-threats}
+
+The executable mutant models re-implement the same specification that the
+suites were designed from, so the matrix reproduction confirms that the
+hand derivation was carried out correctly under the stated readings; it does
+not test the specification itself. The arbitrary-precision oracle of
+\S\ref{sec:emp-exhaustive} uses the same formula as the implementation, so it
+detects overflow and branch-order errors but is not an independent check of
+the formula. Stryker's mutant population is generated by fixed operators on a
+short implementation (23 and 24 mutants) and is far smaller than the space of
+plausible faults, and the Microsoft Testing Platform runner of Stryker.NET
+was still marked as a preview at the time of the run; the per-test kill
+attribution in Table~\ref{tab:emp-stryker} is taken from its report. Timings
+come from a single machine and are indicative only.
+
+%=================================================================
 \section{Limitations}
+\label{sec:limitations}
 %=================================================================
 
 \begin{itemize}
-    \item No mutation-testing tool, compiler, or interpreter was executed;
-    all mutant-killing claims in Sections~4.12 and~5.12 (and Appendices~D,
-    H) are analytically derived from the stated specification and are
-    explicitly labelled as \emph{expected}, not measured. A real
-    implementation could deviate from the specification in ways this report
-    cannot detect.
+    \item The mutant-killing claims in Sections~4.12 and~5.12 (and
+    Appendices~D, H) were derived analytically; Section~\ref{sec:empirical}
+    confirms them by execution against one implementation written for this
+    report. A different implementation could deviate from the
+    specification in ways that this implementation does not exhibit.
     \item The mutant sets (M1--M14, N1--N10) were themselves designed to
     probe the boundaries already identified in Sections~4.8--4.9 and
     5.8--5.9, and the five tests added late in the ATM suite's
@@ -1877,11 +2099,13 @@ illustration of the pattern, not as independent, unbiased evidence for it.
     The resulting full (\(13/13\), \(10/10\)) analytically expected
     coverage is therefore, in part, a designed-in property of this
     boundary-first construction process, not an unbiased test of whether
-    boundary tests are generally superior to interior ones; a fair
-    comparison would require an independently generated mutant population
-    (e.g.\ from an automated mutation tool applied to a real
-    implementation) against which this suite's boundary-heavy design was
-    not itself calibrated.
+    boundary tests are generally superior to interior ones. The
+    tool-generated mutants of Section~\ref{sec:emp-stryker} are a first
+    population that the suites were not calibrated against, but they are
+    few (23 and 24) and come from one short implementation; a fair
+    comparison with interior or random suites would need larger,
+    independently generated mutant populations over several
+    implementations.
     \item $\mathit{balance}$ was treated as an unbounded integer (currency
     precision and multi-day rolling-window policy beyond R3/R5 are not
     modelled, since none is specified); $\mathit{dailyUsed}$ was refined to
@@ -1896,17 +2120,22 @@ illustration of the pattern, not as independent, unbiased evidence for it.
     itself is domain-size-independent, so this bound affects only which
     domain-edge boundary tests (\S5.8) are meaningful, not the discriminant
     analysis.
-    \item Equivalence of a mutant was verified exhaustively for M4
-    (\S4.12) and asserted by direct substitution for every other mutant
-    against every test in each suite (\S4.12, \S5.12), but a full proof
-    that no \emph{other}, untested input could distinguish an apparently
-    non-equivalent mutant was not attempted; this is a property of manual,
-    non-executed mutation analysis in general, not specific to these two
-    case studies.
+    \item Equivalence of M4 was argued in \S4.12 and checked by execution
+    over 20{,}300{,}001 amounts (Section~\ref{sec:emp-matrix}); for every
+    other mutant, kill status was established against the suite inputs
+    only, first by substitution and then by execution. That a mutant is
+    non-equivalent follows from the suite input that kills it, but no
+    search was made for further inputs that distinguish it.
+    \item The implementation and the executable mutant models were written
+    by the same party that designed the suites, so the executed results
+    test the consistency of design, models and implementation with the
+    stated specification, not the specification's adequacy for a real ATM
+    or solver.
 \end{itemize}
 
 %=================================================================
 \section{Conclusion}
+\label{sec:conclusion}
 %=================================================================
 
 This report applied the same disciplined pipeline -- specification
@@ -1917,9 +2146,15 @@ classifier. In both, individually well-formed, per-variable boundary
 coverage was shown to be insufficient whenever the specification's real
 decision surface is a \emph{relation} among variables rather than a
 predicate on any one of them; multi-variable boundary-combination tests were
-constructed explicitly to close that gap, and the analytically expected
-mutation matrices confirm that the resulting suites detect exactly the
-faults that a naive, one-variable-at-a-time suite would miss. Every test
+constructed explicitly to close that gap, and the mutation matrices confirm
+that the resulting suites detect exactly the faults that a naive,
+one-variable-at-a-time suite would miss. Executing the design confirmed it:
+all 166 tests passed against an implementation of both specifications, the
+24 mutant columns of the two matrices were reproduced cell for cell, every
+tool-generated mutant inside the modelled domains was killed by the paper
+suites, and the exhaustive sweep showed that the \(\Delta=0\) boundary
+covers only 0.0137\,\% of the quadratic domain, so random sampling would
+rarely reach it. Every test
 case in this report answers the question ``why does this test case exist?''
 by pointing to a specific partition, boundary, derived constraint, or
 interaction -- which is the property that separates a designed test suite
@@ -1932,9 +2167,17 @@ The author declares no known competing financial interests or personal
 relationships that could have appeared to influence the work reported in
 this paper.
 
+\section*{Data and code availability}
+
+The implementation, all test code, the executable mutant models, the
+Stryker.NET configuration and the continuous-integration workflow that
+re-runs the tests and the mutation analysis are kept in the source
+repository accompanying this report and are available from the author on
+request. Section~\ref{sec:empirical} lists the tool versions used.
+
 \section*{CRediT authorship contribution statement}
 
-Conceptualization, Methodology, Formal analysis, Investigation,
+Conceptualization, Methodology, Software, Formal analysis, Investigation,
 Validation, Visualization, Writing -- original draft,
 Writing -- review \& editing: \VN{Mai H\h{a}i Th\`anh}.
 
@@ -1945,9 +2188,14 @@ During the preparation of this manuscript, generative AI assistance
 notes into an academic paper format, assist with the organization and
 drafting of the equivalence partitioning, boundary value analysis, and
 mutation testing sections, cross-check mathematical and test-design
-reasoning, and assist with language editing. The author reviewed and
-revised the AI-assisted material and takes full responsibility for the
-final content of this manuscript.
+reasoning, and assist with language editing. For the empirical validation
+(Section~\ref{sec:empirical}), AI coding assistants (Claude, Anthropic, and
+models accessed through the OpenCode agent) were used to help write the
+implementation, the test code, the executable mutant models and the
+continuous-integration configuration, and to run the test and mutation
+tools; all reported numbers are taken from the generated tool reports. The
+author reviewed and revised the AI-assisted material and takes full
+responsibility for the final content of this manuscript.
 
 \begin{thebibliography}{9}
 
@@ -2113,8 +2361,8 @@ M1--M14 against all twenty-two tests TC-ATM-01 through TC-ATM-22, is
 reprinted below. It is identical to Table~\ref{tab:atm-matrix} (\S4.12); M4
 is the one equivalent mutant (\S4.12) and is excluded from the
 non-equivalent denominator of the mutation-score definition in \S2.5. All
-entries are
-analytically expected, not measured.
+entries are analytically derived; their executed reproduction is reported
+in Section~\ref{sec:emp-matrix}.
 
 \setlength{\tabcolsep}{3pt}
 \begin{longtable}{lcccccccccccccc}
@@ -2268,7 +2516,8 @@ N1--N10 against all sixteen tests TC-QE-01 through TC-QE-16, is reprinted
 below. It is identical to Table~\ref{tab:quad-matrix} (\S5.12); every entry
 was obtained by direct substitution of each test's coefficients into both
 the original and the mutated classification rule, and all entries are
-analytically expected, not measured.
+analytically derived; their executed reproduction is reported in
+Section~\ref{sec:emp-matrix}.
 
 \setlength{\tabcolsep}{5pt}
 \begin{longtable}{lcccccccccc}
@@ -2306,8 +2555,8 @@ Of the ten mutants, none is equivalent: each of N1--N10 is killed by at
 least one test above, so, per the mutation-score definition in \S2.5, the
 suite achieves full (\(10/10\)) analytically expected coverage of the
 non-equivalent quadratic mutants -- again a statement about the suite's
-design against the specification, not a measured score from an executed
-tool.
+design against the specification. The executed reproduction and a
+tool-measured score are reported in Section~\ref{sec:empirical}.
 
 
 \end{document}

@@ -1,65 +1,46 @@
 namespace SwtBlackbox.Atm.Tests;
 
+/// <summary>
+///     Supplementary ATM cases outside the designed suite: out-of-domain and extreme inputs (negative amount,
+///     negative balance, long.MinValue/MaxValue, overflow-prone sums) and the dailyUsed guard. None repeats an input
+///     of the designed suite.
+/// </summary>
 public class AtmBoundaryTests
 {
     public static IEnumerable<TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>> BoundaryCases =>
     [
-        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(1000000, 0, 19999999,
-                AccountStatus.Active, true, WithdrawalResult.RejectedInvalidAmount)
-            .WithTestDisplayName("SUP-ATM-01: amount 19999999 (in range, not multiple)")
+        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(
+                1_000_000, 0, -50_000, AccountStatus.Active, true, WithdrawalResult.RejectedInvalidAmount)
+            .WithTestDisplayName("SUP-ATM-01: amount -50,000 (negative multiple)")
             .WithTrait("Type", "BoundarySupplementary"),
-        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(1000000, 0, 20000001,
-                AccountStatus.Active, true, WithdrawalResult.RejectedInvalidAmount)
-            .WithTestDisplayName("SUP-ATM-02: amount 20000001 (over range and non-multiple)")
+        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(
+                1_000_000, 0, long.MinValue, AccountStatus.Active, true, WithdrawalResult.RejectedInvalidAmount)
+            .WithTestDisplayName("SUP-ATM-02: amount long.MinValue")
             .WithTrait("Type", "BoundarySupplementary"),
-        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(1000000, 0, 50000,
-                AccountStatus.Active, true, WithdrawalResult.Approved)
-            .WithTestDisplayName("SUP-ATM-03: amount 50000 is first reachable valid amount")
+        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(
+                1_000_000, 0, long.MaxValue, AccountStatus.Active, true, WithdrawalResult.RejectedInvalidAmount)
+            .WithTestDisplayName("SUP-ATM-03: amount long.MaxValue")
             .WithTrait("Type", "BoundarySupplementary"),
-        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(1000000, 0, -50000,
-                AccountStatus.Active, true, WithdrawalResult.RejectedInvalidAmount)
-            .WithTestDisplayName("SUP-ATM-04: amount -50000 (negative multiple)")
+        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(
+                -100, 0, 500_000, AccountStatus.Active, true, WithdrawalResult.RejectedInsufficientBalance)
+            .WithTestDisplayName("SUP-ATM-04: negative (overdrawn) balance -100")
             .WithTrait("Type", "BoundarySupplementary"),
-        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(1000000, 0, long.MinValue,
-                AccountStatus.Active, true, WithdrawalResult.RejectedInvalidAmount)
-            .WithTestDisplayName("SUP-ATM-05: amount long.MinValue")
+        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(
+                1_000_000, 19_950_000, 50_000, AccountStatus.Active, true, WithdrawalResult.Approved)
+            .WithTestDisplayName("SUP-ATM-05: dailyUsed 19,950,000 + amount 50,000 -> Approved")
             .WithTrait("Type", "BoundarySupplementary"),
-        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(1000000, 0, long.MaxValue,
-                AccountStatus.Active, true, WithdrawalResult.RejectedInvalidAmount)
-            .WithTestDisplayName("SUP-ATM-06: amount long.MaxValue")
+        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(
+                1_000_000, 20_000_000, 50_000, AccountStatus.Active, true, WithdrawalResult.RejectedDailyLimit)
+            .WithTestDisplayName("SUP-ATM-06: dailyUsed 20,000,000 + amount 50,000 -> RejectedDailyLimit")
             .WithTrait("Type", "BoundarySupplementary"),
-        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(550000, 0, 500000,
-                AccountStatus.Active, false, WithdrawalResult.Approved)
-            .WithTestDisplayName("SUP-ATM-07: External exact boundary - balance 550000 approved")
+        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(
+                1_000_000, long.MaxValue, 50_000, AccountStatus.Active, true, WithdrawalResult.RejectedDailyLimit)
+            .WithTestDisplayName("SUP-ATM-07: dailyUsed long.MaxValue, amount 50,000 -> RejectedDailyLimit")
             .WithTrait("Type", "BoundarySupplementary"),
-        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(549999, 0, 500000,
-                AccountStatus.Active, false, WithdrawalResult.RejectedInsufficientBalance)
-            .WithTestDisplayName("SUP-ATM-08: External exact boundary - balance 549999 rejected")
-            .WithTrait("Type", "BoundarySupplementary"),
-        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(1000000, 20000000, 50000,
-                AccountStatus.Active, true, WithdrawalResult.RejectedDailyLimit)
-            .WithTestDisplayName("SUP-ATM-09: dailyUsed 20000000 + amount 50000 -> RejectedDailyLimit")
-            .WithTrait("Type", "BoundarySupplementary"),
-        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(1000000, 19950000, 50000,
-                AccountStatus.Active, true, WithdrawalResult.Approved)
-            .WithTestDisplayName("SUP-ATM-10: dailyUsed 19950000 + amount 50000 -> Approved")
-            .WithTrait("Type", "BoundarySupplementary"),
-        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(1000000, long.MaxValue, 50000,
-                AccountStatus.Active, true, WithdrawalResult.RejectedDailyLimit)
-            .WithTestDisplayName("SUP-ATM-11: dailyUsed long.MaxValue, amount 50000 -> RejectedDailyLimit")
-            .WithTrait("Type", "BoundarySupplementary"),
-        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(long.MaxValue, 0, 20000000,
-                AccountStatus.Active, false, WithdrawalResult.Approved)
-            .WithTestDisplayName("SUP-ATM-12: balance long.MaxValue, amount 20000000, External -> Approved")
+        new TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>(
+                long.MaxValue, 0, 20_000_000, AccountStatus.Active, false, WithdrawalResult.Approved)
+            .WithTestDisplayName("SUP-ATM-08: balance long.MaxValue, amount 20,000,000, External -> Approved")
             .WithTrait("Type", "BoundarySupplementary")
-    ];
-
-    public static IEnumerable<TheoryDataRow<bool, WithdrawalResult>> FeeToggle =>
-    [
-        new TheoryDataRow<bool, WithdrawalResult>(true, WithdrawalResult.Approved)
-            .WithTestDisplayName("SUP-ATM-13: C5 toggle - internal approved"),
-        new TheoryDataRow<bool, WithdrawalResult>(false, WithdrawalResult.RejectedInsufficientBalance)
-            .WithTestDisplayName("SUP-ATM-14: C5 toggle - external rejected")
     ];
 
     [Theory]
@@ -68,14 +49,6 @@ public class AtmBoundaryTests
         AccountStatus status, bool isInternal, WithdrawalResult expected)
     {
         var actual = AtmService.Withdraw(balance, dailyUsed, amount, status, isInternal);
-        Assert.Equal(expected, actual);
-    }
-
-    [Theory]
-    [MemberData(nameof(FeeToggle))]
-    public void Withdraw_C5TogglePair_Expected(bool isInternal, WithdrawalResult expected)
-    {
-        var actual = AtmService.Withdraw(500000, 0, 500000, AccountStatus.Active, isInternal);
         Assert.Equal(expected, actual);
     }
 

@@ -54,7 +54,7 @@ public class AtmProperties
         });
     }
 
-    // Inputs that satisfy R1–R5 by construction (random inputs are approved only ~7% of the time,
+    // Inputs that satisfy R1–R5 by construction (random inputs are approved only about 9% of the time,
     // which would make approval-conditioned properties pass vacuously). Slack is how far the input
     // sits inside the valid region, so boundary-tight cases (slack 0) are generated too.
     private static Arbitrary<AtmInput> ApprovableInputArb()

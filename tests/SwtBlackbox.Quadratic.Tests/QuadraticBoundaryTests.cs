@@ -1,5 +1,10 @@
 namespace SwtBlackbox.Quadratic.Tests;
 
+/// <summary>
+///     Supplementary quadratic cases outside the designed suite: coefficient-domain validation, in-domain edge
+///     values, discriminant reachability and a few sign patterns. None repeats a coefficient triple of the designed
+///     suite.
+/// </summary>
 public class QuadraticBoundaryTests
 {
     public static IEnumerable<TheoryDataRow<int, int, int, string>> CoefficientOutOfRangeThrows =>
@@ -42,32 +47,18 @@ public class QuadraticBoundaryTests
 
     public static IEnumerable<TheoryDataRow<int, int, int, long>> DiscriminantReachability =>
     [
-        new TheoryDataRow<int, int, int, long>(1, 1, 1, -3)
-            .WithTestDisplayName("SUP-QE-16: discriminant (1,1,1) -> -3"),
-        new TheoryDataRow<int, int, int, long>(1, 0, 1, -4)
-            .WithTestDisplayName("SUP-QE-17: discriminant (1,0,1) -> -4"),
-        new TheoryDataRow<int, int, int, long>(1, 2, 1, 0)
-            .WithTestDisplayName("SUP-QE-18: discriminant (1,2,1) -> 0"),
-        new TheoryDataRow<int, int, int, long>(1, 3, 2, 1)
-            .WithTestDisplayName("SUP-QE-19: discriminant (1,3,2) -> 1"),
         new TheoryDataRow<int, int, int, long>(1, 4, 3, 4)
-            .WithTestDisplayName("SUP-QE-20: discriminant (1,4,3) -> 4"),
+            .WithTestDisplayName("SUP-QE-16: discriminant (1,4,3) -> 4"),
         new TheoryDataRow<int, int, int, long>(100, 0, 100, -40000)
-            .WithTestDisplayName("SUP-QE-21: discriminant (100,0,100) -> -40000"),
+            .WithTestDisplayName("SUP-QE-17: discriminant (100,0,100) -> -40000"),
         new TheoryDataRow<int, int, int, long>(-100, 100, 100, 50000)
-            .WithTestDisplayName("SUP-QE-22: discriminant (-100,100,100) -> 50000")
+            .WithTestDisplayName("SUP-QE-18: discriminant (-100,100,100) -> 50000")
     ];
 
     public static IEnumerable<TheoryDataRow<int, int, int, QuadraticResult>> EdgeCases =>
     [
-        new TheoryDataRow<int, int, int, QuadraticResult>(1, 0, -1, QuadraticResult.TwoDistinctRealRoots)
-            .WithTestDisplayName("SUP-QE-23: a!=0,b=0,c<0 -> TwoDistinctRealRoots"),
-        new TheoryDataRow<int, int, int, QuadraticResult>(1, 5, 0, QuadraticResult.TwoDistinctRealRoots)
-            .WithTestDisplayName("SUP-QE-24: a!=0,b!=0,c=0 -> TwoDistinctRealRoots"),
         new TheoryDataRow<int, int, int, QuadraticResult>(-1, 0, -1, QuadraticResult.NoRealRoots)
-            .WithTestDisplayName("SUP-QE-25: a<0,b=0,c<0 -> NoRealRoots"),
-        new TheoryDataRow<int, int, int, QuadraticResult>(0, -1, 0, QuadraticResult.OneLinearRoot)
-            .WithTestDisplayName("SUP-QE-26: a==0,b!=0,c==0 -> OneLinearRoot")
+            .WithTestDisplayName("SUP-QE-19: a<0,b=0,c<0 -> NoRealRoots")
     ];
 
     [Theory]

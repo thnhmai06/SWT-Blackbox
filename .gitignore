@@ -87,3 +87,12 @@ fabric.properties
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
 
+
+# LaTeX build by-products
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+
+# Per-user IDE settings
+*.DotSettings.user

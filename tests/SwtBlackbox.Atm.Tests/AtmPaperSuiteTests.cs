@@ -1,8 +1,11 @@
+using SwtBlackbox.Tests;
+
 namespace SwtBlackbox.Atm.Tests;
 
 /// <summary>
-///     The complete 22-test ATM suite of report.tex §4.10 (Table "ATM complete test suite", Appendix C).
-///     Traits carry the paper's traceability columns so a run can be filtered by partition, boundary or combination.
+///     The complete 37-test ATM suite of report.tex, Case Study I, Test Suite Construction.
+///     Traits carry the traceability columns (decision rule, layer, boundary, combination) so a run can be
+///     filtered by any of them.
 /// </summary>
 public class AtmPaperSuiteTests
 {
@@ -11,74 +14,101 @@ public class AtmPaperSuiteTests
 
     internal static readonly AtmPaperCase[] Cases =
     [
-        Case("TC-ATM-01", "nominal baseline", 1_000_000, 0, 500_000, Active, true, WithdrawalResult.Approved,
-            "P_a,2 P_bal,2 P_dl,1 P_s,1 P_i,1"),
-        Case("TC-ATM-02", "one unit below R2 range floor", 1_000_000, 0, 49_999, Active, true,
-            WithdrawalResult.RejectedInvalidAmount,
-            "P_a,1", "amount lower boundary, range side (-1)"),
-        Case("TC-ATM-03", "first reachable amount and balance = T, both tight", 50_000, 0, 50_000, Active, true,
-            WithdrawalResult.Approved,
-            "P_a,2", "first reachable amount = balance = T", "C1"),
-        Case("TC-ATM-04", "balance one unit past T", 50_001, 0, 50_000, Active, true, WithdrawalResult.Approved,
-            "P_a,2 P_bal,2", "balance = T+1", "C2"),
-        Case("TC-ATM-05", "last reachable amount, balance = T, daily sum = limit", 20_000_000, 0, 20_000_000, Active,
-            true, WithdrawalResult.Approved,
-            "P_a,2", "last reachable amount, balance = T"),
-        Case("TC-ATM-06", "over range but still a multiple", 1_000_000, 0, 20_050_000, Active, true,
-            WithdrawalResult.RejectedInvalidAmount,
-            "P_a,4", "upper boundary, range side (+50,000)"),
-        Case("TC-ATM-07", "in range but not a multiple of 50,000", 1_000_000, 0, 50_001, Active, true,
-            WithdrawalResult.RejectedInvalidAmount,
-            "P_a,3", "interior granularity boundary"),
-        Case("TC-ATM-08", "balance one unit below T", 499_999, 0, 500_000, Active, true,
-            WithdrawalResult.RejectedInsufficientBalance,
-            "P_bal,1", "balance = T-1"),
-        Case("TC-ATM-09", "balance exactly T is on the valid side", 500_000, 0, 500_000, Active, true,
-            WithdrawalResult.Approved,
-            "P_bal,2", "balance = T"),
-        Case("TC-ATM-10", "daily sum one below limit", 1_000_000, 19_499_999, 500_000, Active, true,
-            WithdrawalResult.Approved,
-            "P_dl,1", "daily sum = 20,000,000-1"),
-        Case("TC-ATM-11", "daily sum exactly at limit is valid", 1_000_000, 19_500_000, 500_000, Active, true,
-            WithdrawalResult.Approved,
-            "P_dl,1", "daily sum = 20,000,000"),
-        Case("TC-ATM-12", "daily sum one over limit", 1_000_000, 19_500_001, 500_000, Active, true,
-            WithdrawalResult.RejectedDailyLimit,
-            "P_dl,2", "daily sum = 20,000,000+1"),
-        Case("TC-ATM-13", "frozen account with otherwise perfect inputs", 1_000_000, 0, 500_000, Frozen, true,
-            WithdrawalResult.RejectedInvalidAccount,
-            "P_s,2", "categorical status"),
-        Case("TC-ATM-14", "external fee moves T to 550,000 above balance", 500_000, 0, 500_000, Active, false,
-            WithdrawalResult.RejectedInsufficientBalance,
-            "P_i,2", "fee threshold shift", "C5"),
-        Case("TC-ATM-15", "balance = T and daily sum = limit simultaneously", 500_000, 19_500_000, 500_000, Active,
-            true, WithdrawalResult.Approved,
-            "R3,R5 both tight", "double derived boundary", "C3"),
-        Case("TC-ATM-16", "R3 and R5 both fail, R3 reported first", 499_999, 19_500_001, 500_000, Active, true,
-            WithdrawalResult.RejectedDailyLimit,
-            "R3,R5 both fail", "daily sum = 20,000,001 and balance < T", "C4"),
-        Case("TC-ATM-17", "negative (overdrawn) balance", -100, 0, 500_000, Active, true,
-            WithdrawalResult.RejectedInsufficientBalance,
-            "balance < 0 (deep invalid)"),
-        Case("TC-ATM-18", "divisible by 10,000 but not by 50,000", 1_000_000, 0, 60_000, Active, true,
-            WithdrawalResult.RejectedInvalidAmount,
-            "P_a,3", "interior granularity boundary"),
-        Case("TC-ATM-19", "balance between correct (550,000) and wrong-fee (505,000) thresholds", 520_000, 0, 500_000,
-            Active, false, WithdrawalResult.RejectedInsufficientBalance,
-            "P_bal,1", "balance between correct and incorrect fee threshold", "C6"),
-        Case("TC-ATM-20", "zero amount is a multiple but below the floor", 1_000_000, 0, 0, Active, true,
-            WithdrawalResult.RejectedInvalidAmount,
-            "P_a,1", "amount = 0", "C7"),
-        Case("TC-ATM-21", "only approved external test, balance between 550,000 and 600,000", 580_000, 0, 500_000,
-            Active, false, WithdrawalResult.Approved,
-            "P_a,2 P_bal,2 P_i,2", "fee threshold, External-Approved", "C8"),
-        Case("TC-ATM-22", "R1 and R2 both fail, R1 reported first", 1_000_000, 0, 49_999, Frozen, true,
-            WithdrawalResult.RejectedInvalidAccount,
-            "P_a,1 P_s,2", "R1 and R2 simultaneously invalid", "C9")
+        // L1: decision-table core, one test per feasible collapsed rule.
+        Case("TC-ATM-01", "frozen account, otherwise nominal", 25_000_000, 0, 500_000, Frozen, true,
+            WithdrawalResult.RejectedInvalidAccount, "L1", "DR1"),
+        Case("TC-ATM-02", "A1 nominal: midpoint of [0, 50,000)", 25_000_000, 0, 25_000, Active, true,
+            WithdrawalResult.RejectedInvalidAmount, "L1", "DR2"),
+        Case("TC-ATM-03", "A3 nominal: in range, not a multiple of 50,000", 25_000_000, 0, 512_345, Active, true,
+            WithdrawalResult.RejectedInvalidAmount, "L1", "DR3"),
+        Case("TC-ATM-04", "A4 nominal: above the 20,000,000 maximum", 25_000_000, 0, 30_000_000, Active, true,
+            WithdrawalResult.RejectedInvalidAmount, "L1", "DR4"),
+        Case("TC-ATM-05", "daily sum 20,250,000 exceeds the limit", 25_000_000, 19_750_000, 500_000, Active, true,
+            WithdrawalResult.RejectedDailyLimit, "L1", "DR5"),
+        Case("TC-ATM-06", "internal, balance 100,000 below the amount", 100_000, 0, 500_000, Active, true,
+            WithdrawalResult.RejectedInsufficientBalance, "L1", "DR6"),
+        Case("TC-ATM-07", "nominal baseline", 25_000_000, 0, 500_000, Active, true,
+            WithdrawalResult.Approved, "L1", "DR7"),
+        Case("TC-ATM-08", "external, balance 100,000 below amount + fee", 100_000, 0, 500_000, Active, false,
+            WithdrawalResult.RejectedInsufficientBalance, "L1", "DR8"),
+        Case("TC-ATM-09", "external with ample balance", 25_000_000, 0, 500_000, Active, false,
+            WithdrawalResult.Approved, "L1", "DR9"),
+
+        // L2: 3-value BVA on the amount condition, integer line and reachable lattice (multiples of 50,000).
+        Case("TC-ATM-10", "lattice Min-: nearest multiple of 50,000 below the range", 25_000_000, 0, 0, Active, true,
+            WithdrawalResult.RejectedInvalidAmount, "L2", "DR2", "lattice Min-"),
+        Case("TC-ATM-11", "integer Min-: one unit below the range floor", 25_000_000, 0, 49_999, Active, true,
+            WithdrawalResult.RejectedInvalidAmount, "L2", "DR2", "integer Min-"),
+        Case("TC-ATM-12", "Min: the range floor is the first valid amount", 25_000_000, 0, 50_000, Active, true,
+            WithdrawalResult.Approved, "L2", "DR7", "Min"),
+        Case("TC-ATM-13", "integer Min+: first non-multiple above the floor (granularity)", 25_000_000, 0, 50_001,
+            Active, true,
+            WithdrawalResult.RejectedInvalidAmount, "L2", "DR3", "integer Min+"),
+        Case("TC-ATM-14", "lattice Min+: second multiple of 50,000", 25_000_000, 0, 100_000, Active, true,
+            WithdrawalResult.Approved, "L2", "DR7", "lattice Min+"),
+        Case("TC-ATM-15", "lattice Max-: last multiple below the maximum", 25_000_000, 0, 19_950_000, Active, true,
+            WithdrawalResult.Approved, "L2", "DR7", "lattice Max-"),
+        Case("TC-ATM-16", "integer Max-: one unit below the maximum (granularity)", 25_000_000, 0, 19_999_999,
+            Active, true,
+            WithdrawalResult.RejectedInvalidAmount, "L2", "DR3", "integer Max-"),
+        Case("TC-ATM-17", "Max: amount = daily limit, so daily sum = 20,000,000 is unavoidable", 25_000_000, 0,
+            20_000_000, Active, true,
+            WithdrawalResult.Approved, "L2", "DR7", "Max"),
+        Case("TC-ATM-18", "integer Max+: one unit above the maximum", 25_000_000, 0, 20_000_001, Active, true,
+            WithdrawalResult.RejectedInvalidAmount, "L2", "DR4", "integer Max+"),
+        Case("TC-ATM-19", "lattice Max+: next multiple above the maximum", 25_000_000, 0, 20_050_000, Active, true,
+            WithdrawalResult.RejectedInvalidAmount, "L2", "DR4", "lattice Max+"),
+
+        // L2: BVA on the daily sum (dailyUsed + 500,000 against the 20,000,000 limit).
+        Case("TC-ATM-20", "daily sum one below the limit", 25_000_000, 19_499_999, 500_000, Active, true,
+            WithdrawalResult.Approved, "L2", "DR7", "sum T-1"),
+        Case("TC-ATM-21", "daily sum exactly at the limit", 25_000_000, 19_500_000, 500_000, Active, true,
+            WithdrawalResult.Approved, "L2", "DR7", "sum T"),
+        Case("TC-ATM-22", "daily sum one over the limit", 25_000_000, 19_500_001, 500_000, Active, true,
+            WithdrawalResult.RejectedDailyLimit, "L2", "DR5", "sum T+1"),
+
+        // L2: BVA on balance against amount + fee, in both columns of the network condition (isInternal).
+        Case("TC-ATM-23", "internal, balance one below the amount", 499_999, 0, 500_000, Active, true,
+            WithdrawalResult.RejectedInsufficientBalance, "L2", "DR6", "Internal T-1"),
+        Case("TC-ATM-24", "internal, balance exactly the amount", 500_000, 0, 500_000, Active, true,
+            WithdrawalResult.Approved, "L2", "DR7", "Internal T"),
+        Case("TC-ATM-25", "internal, balance one above the amount", 500_001, 0, 500_000, Active, true,
+            WithdrawalResult.Approved, "L2", "DR7", "Internal T+1"),
+        Case("TC-ATM-26", "external, balance one below amount + fee", 549_999, 0, 500_000, Active, false,
+            WithdrawalResult.RejectedInsufficientBalance, "L2", "DR8", "External T-1"),
+        Case("TC-ATM-27", "external, balance exactly amount + fee", 550_000, 0, 500_000, Active, false,
+            WithdrawalResult.Approved, "L2", "DR9", "External T"),
+        Case("TC-ATM-28", "external, balance one above amount + fee", 550_001, 0, 500_000, Active, false,
+            WithdrawalResult.Approved, "L2", "DR9", "External T+1"),
+
+        // L3a: boundary combinations (extension).
+        Case("TC-ATM-29", "amount Min and balance = T", 50_000, 0, 50_000, Active, true,
+            WithdrawalResult.Approved, "L3", "DR7", combo: "AC1"),
+        Case("TC-ATM-30", "amount Max, daily sum = limit and balance = T", 20_000_000, 0, 20_000_000, Active, true,
+            WithdrawalResult.Approved, "L3", "DR7", combo: "AC2"),
+        Case("TC-ATM-31", "daily sum = limit and balance = T", 500_000, 19_500_000, 500_000, Active, true,
+            WithdrawalResult.Approved, "L3", "DR7", combo: "AC3"),
+        Case("TC-ATM-32", "network toggled against TC-ATM-24: same numbers, external", 500_000, 0, 500_000,
+            Active, false,
+            WithdrawalResult.RejectedInsufficientBalance, "L3", "DR8", combo: "AC4"),
+
+        // L3b: don't-care expansion (extension): the rule evaluated next in the precedence order is made to fail too.
+        Case("TC-ATM-33", "R1 and R2 both fail, R1 reported first", 25_000_000, 0, 49_999, Frozen, true,
+            WithdrawalResult.RejectedInvalidAccount, "L3", "DR1", combo: "AX1"),
+        Case("TC-ATM-34", "R2 (A1) and R3 both fail, R2 reported first", 25_000_000, 20_000_000, 49_999, Active, true,
+            WithdrawalResult.RejectedInvalidAmount, "L3", "DR2", combo: "AX2"),
+        Case("TC-ATM-35", "R2 (A3) and R3 both fail, R2 reported first", 25_000_000, 20_000_000, 50_001, Active, true,
+            WithdrawalResult.RejectedInvalidAmount, "L3", "DR3", combo: "AX3"),
+        Case("TC-ATM-36", "R3 and R5 both fail, R3 reported first", 499_999, 19_500_001, 500_000, Active, true,
+            WithdrawalResult.RejectedDailyLimit, "L3", "DR5", combo: "AX4"),
+
+        // L4: mutation feedback, the test needed to kill the designed mutant M8 that L1-L3 leave alive.
+        Case("TC-ATM-37", "amount divisible by 10,000 but not by 50,000", 25_000_000, 0, 60_000, Active, true,
+            WithdrawalResult.RejectedInvalidAmount, "L4", "DR3", "L4: divisible by 10,000 but not by 50,000 (M8)")
     ];
 
     public static IEnumerable<TheoryDataRow<long, long, long, AccountStatus, bool, WithdrawalResult>> PaperSuite =>
-        Cases.Select(c => c.ToTheoryDataRow());
+        Cases.Where(c => PaperLayers.Includes(c.Layer)).Select(c => c.ToTheoryDataRow());
 
     [Theory]
     [MemberData(nameof(PaperSuite))]
@@ -95,15 +125,14 @@ public class AtmPaperSuiteTests
         string id, string rationale,
         long balance, long dailyUsed, long amount, AccountStatus accountStatus, bool isInternal,
         WithdrawalResult expected,
-        string partition, string? boundary = null, string? combo = null)
+        string layer, string rule, string? boundary = null, string? combo = null)
     {
         return new AtmPaperCase(id, rationale, balance, dailyUsed, amount, accountStatus, isInternal, expected,
-            partition, boundary,
-            combo);
+            layer, rule, boundary, combo);
     }
 }
 
-/// <summary>One row of the paper's ATM suite with its traceability columns.</summary>
+/// <summary>One row of the ATM suite with its traceability columns.</summary>
 internal sealed record AtmPaperCase(
     string Id,
     string Rationale,
@@ -113,7 +142,8 @@ internal sealed record AtmPaperCase(
     AccountStatus AccountStatus,
     bool IsInternal,
     WithdrawalResult Expected,
-    string Partition,
+    string Layer,
+    string Rule,
     string? Boundary,
     string? Combo)
 {
@@ -123,7 +153,8 @@ internal sealed record AtmPaperCase(
                 Balance, DailyUsed, Amount, AccountStatus, IsInternal, Expected)
             .WithTestDisplayName($"{Id}: {Rationale} -> {Expected}")
             .WithTrait("PaperId", Id)
-            .WithTrait("Partition", Partition);
+            .WithTrait("Layer", Layer)
+            .WithTrait("Rule", Rule);
         if (Boundary is not null)
             row.WithTrait("Boundary", Boundary);
         if (Combo is not null)

@@ -85,36 +85,36 @@ public class QuadraticExhaustiveTests
         Assert.Equal(200L * 201, counts[(int)QuadraticResult.OneLinearRoot]);
     }
 
+    // Over the 8,080,200 quadratic triples (a ≠ 0), Δ ≡ 0 or 1 (mod 4) leaves only -4, -3, 0, 1, 4 in [-4, 4];
+    // the counts are the ones reported in report.tex, Case Study II, Executed Validation.
     [Fact]
-    public void Exhaustive_Discriminant_NearZero_ReachableSet()
+    public void Exhaustive_Discriminant_NearZero_ReachableValuesAndCounts()
     {
-        var seen = new bool[9]; // index = Δ + 4, for Δ in [-4, 4]
+        var counts = new long[9]; // index = Δ + 4, for Δ in [-4, 4]
         var gate = new object();
 
         Parallel.For(Min, Max + 1, a =>
         {
-            var local = new bool[9];
+            if (a == 0)
+                return;
+
+            var local = new long[9];
             for (var b = Min; b <= Max; b++)
             for (var c = Min; c <= Max; c++)
             {
                 var d = QuadraticSolver.Discriminant(a, b, c);
                 if (d is >= -4 and <= 4)
-                    local[d + 4] = true;
+                    local[d + 4]++;
             }
 
             lock (gate)
             {
                 for (var i = 0; i < 9; i++)
-                    seen[i] |= local[i];
+                    counts[i] += local[i];
             }
         });
 
-        var sortedSet = seen
-            .Select((hit, idx) => (hit, delta: (long)(idx - 4)))
-            .Where(x => x.hit)
-            .Select(x => x.delta)
-            .ToArray();
-
-        Assert.Equal(new[] { -4L, -3L, 0L, 1L, 4L }, sortedSet);
+        //                     Δ = -4,  -3, -2, -1,     0,     1, 2, 3,     4
+        Assert.Equal(new long[] { 338, 252, 0, 0, 1_104, 1_880, 0, 0, 1_754 }, counts);
     }
 }

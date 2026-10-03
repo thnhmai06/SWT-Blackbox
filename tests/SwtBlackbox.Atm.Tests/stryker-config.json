@@ -2,6 +2,7 @@
   "stryker-config": {
     "project": "SwtBlackbox.Atm.csproj",
     "test-runner": "mtp",
+    "disable-bail": true,
     "reporters": [
       "progress",
       "html",

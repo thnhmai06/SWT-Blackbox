@@ -2,6 +2,8 @@
   "stryker-config": {
     "project": "SwtBlackbox.Quadratic.csproj",
     "test-runner": "mtp",
+    "disable-bail": true,
+    "additional-timeout": 60000,
     "reporters": [
       "progress",
       "html",

@@ -23,7 +23,7 @@
 \newcommand{\VN}[1]{{\fontencoding{T5}\selectfont #1}}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black,
-pdftitle={Applying Black-Box Testing Techniques to a Practical Case Study},
+pdftitle={Applying Black-Box Testing Techniques to Two Case Studies},
 pdfauthor={Mai Hai Thanh}}
 
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
@@ -32,7 +32,7 @@ pdfauthor={Mai Hai Thanh}}
 \newcommand{\Del}{\Delta}
 \newcommand{\Norm}{\mathrm{Norm}}
 
-\title{\textbf{Applying Black-Box Testing Techniques to a Practical Case Study}}
+\title{\textbf{Applying Black-Box Testing Techniques to Two Case Studies}}
 \author{
     \VN{Mai H\h{a}i Th\`anh}\textsuperscript{a}\\[0.5em]
     \small
@@ -151,8 +151,7 @@ specification is implemented, every designed test is executed, the decision
 table is executed as an oracle, the analytical mutation matrix is compared
 with the kill sets of executable mutant models, and an automated mutation
 tool measures a mutation score on a mutant population that was not designed
-together with the suites. No measured number is used in the analytical
-subsections.
+together with the suites. Apart from two cells of the quadratic Test\(\times\)Mutant matrix, which show executed values and are marked as such, the analytical subsections use no measured number; where they mention an executed result, they refer forward to the executed validation.
 
 Every test case in this report is traceable to a decision rule, a boundary
 coverage item, a boundary combination or further point on a derived
@@ -560,7 +559,7 @@ mutants killed by the designed suite in a Stryker report
 (\texttt{tools/StrykerDesignedKills.cs}) are part of the repository (Data
 and code availability). Every number reported in
 \S\ref{sec:atm-exec} and \S\ref{sec:quad-exec} comes from the runs of
-2~October~2026 on the final test projects (clean Release build, compiler
+3~October~2026 on the final test projects (clean Release build, compiler
 warnings treated as errors) and is asserted by a test or read from a tool
 report; none is estimated. The random baseline uses the fixed seed
 \texttt{20261002}; FsCheck draws new random cases on each run, and no
@@ -1626,7 +1625,7 @@ Since L1--L2 already reaches 21, the largest number reachable inside the
 domain, the L1--L3a value follows without a separate run.
 
 On both populations the decision table layer alone is weak: its nine nominal
-tests kill 3 of the 13 designed and 14 of the 22 tool-generated mutants. Of the eight tool-generated mutants it misses, seven are the relational mutants at the
+tests kill 3 of the 13 designed and 14 of the 22 tool-generated mutants. Of the eight tool-generated mutants it misses, seven are four relational mutants, at the
 amount bounds (\(<\to\le\) at \(50{,}000\), \(>\to\ge\) at \(20{,}000{,}000\)),
 at the daily limit and at the balance threshold, and three mutants that
 change the fee or the way it enters the threshold (fee always \(0\), fee

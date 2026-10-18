@@ -1,4 +1,4 @@
-namespace SwtBlackbox.Quadratic.Tests;
+namespace SwtBlackbox.Quadratic.Tests.Black;
 
 /// <summary>
 ///     Supplementary quadratic cases outside the designed suite: coefficient-domain validation, in-domain edge

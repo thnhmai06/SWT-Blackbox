@@ -1,4 +1,4 @@
-namespace SwtBlackbox.Atm.Tests;
+namespace SwtBlackbox.Atm.Tests.Black;
 
 /// <summary>The fourteen ATM mutants of report.tex §4.11 (Table "ATM mutants").</summary>
 public enum AtmMutant : byte

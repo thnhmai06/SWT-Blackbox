@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace SwtBlackbox.Quadratic.Tests;
+namespace SwtBlackbox.Quadratic.Tests.Black;
 
 /// <summary>
 ///     Exhaustive sweep of every (a, b, c) in [-100, 100]³ (8,120,601 triples): totality, class counts,

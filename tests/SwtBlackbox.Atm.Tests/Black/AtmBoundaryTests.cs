@@ -1,4 +1,4 @@
-namespace SwtBlackbox.Atm.Tests;
+namespace SwtBlackbox.Atm.Tests.Black;
 
 /// <summary>
 ///     Supplementary ATM cases outside the designed suite: out-of-domain and extreme inputs (negative amount,

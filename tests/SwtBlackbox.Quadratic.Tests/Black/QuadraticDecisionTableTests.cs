@@ -1,4 +1,4 @@
-namespace SwtBlackbox.Quadratic.Tests;
+namespace SwtBlackbox.Quadratic.Tests.Black;
 
 /// <summary>
 ///     Executes the collapsed quadratic decision table (QR1..QR10) of report.tex, Case Study II, as an oracle over

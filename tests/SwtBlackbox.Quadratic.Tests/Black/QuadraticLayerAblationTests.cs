@@ -1,4 +1,4 @@
-namespace SwtBlackbox.Quadratic.Tests;
+namespace SwtBlackbox.Quadratic.Tests.Black;
 
 /// <summary>
 ///     Layer ablation of the quadratic suite (report.tex, Case Study II): which of the ten mutants (none is

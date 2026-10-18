@@ -1,4 +1,4 @@
-namespace SwtBlackbox.Atm.Tests;
+namespace SwtBlackbox.Atm.Tests.Black;
 
 /// <summary>
 ///     Verifies the collapsed ATM decision table (DR1..DR9) of report.tex, Case Study I, against the service:

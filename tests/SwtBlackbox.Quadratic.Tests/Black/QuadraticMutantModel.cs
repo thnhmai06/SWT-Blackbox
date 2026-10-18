@@ -1,4 +1,4 @@
-namespace SwtBlackbox.Quadratic.Tests;
+namespace SwtBlackbox.Quadratic.Tests.Black;
 
 /// <summary>The ten quadratic mutants of report.tex §5.11 (Table "Quadratic solver mutants").</summary>
 public enum QuadraticMutant

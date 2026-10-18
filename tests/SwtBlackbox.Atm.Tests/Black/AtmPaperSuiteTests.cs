@@ -1,6 +1,6 @@
 using SwtBlackbox.Tests;
 
-namespace SwtBlackbox.Atm.Tests;
+namespace SwtBlackbox.Atm.Tests.Black;
 
 /// <summary>
 ///     The complete 37-test ATM suite of report.tex, Case Study I, Test Suite Construction.

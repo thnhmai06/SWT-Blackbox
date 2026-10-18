@@ -1,6 +1,6 @@
 using SwtBlackbox.Tests;
 
-namespace SwtBlackbox.Quadratic.Tests;
+namespace SwtBlackbox.Quadratic.Tests.Black;
 
 /// <summary>
 ///     Executes the analytically expected quadratic Test×Mutant matrix (report.tex, Case Study II, Test–Mutant

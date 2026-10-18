@@ -1,4 +1,4 @@
-namespace SwtBlackbox.Atm.Tests;
+namespace SwtBlackbox.Atm.Tests.Black;
 
 /// <summary>
 ///     Layer ablation of the ATM suite (report.tex, Case Study I, Executed Validation): which non-equivalent designed

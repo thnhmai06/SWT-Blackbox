@@ -1,6 +1,6 @@
 using SwtBlackbox.Tests;
 
-namespace SwtBlackbox.Atm.Tests;
+namespace SwtBlackbox.Atm.Tests.Black;
 
 /// <summary>
 ///     Executes the analytically expected ATM Test×Mutant matrix (report.tex, Case Study I, Test–Mutant Analysis):

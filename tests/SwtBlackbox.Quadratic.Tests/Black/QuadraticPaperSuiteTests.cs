@@ -1,6 +1,6 @@
 using SwtBlackbox.Tests;
 
-namespace SwtBlackbox.Quadratic.Tests;
+namespace SwtBlackbox.Quadratic.Tests.Black;
 
 /// <summary>
 ///     The complete 30-test quadratic suite of report.tex, Case Study II, Test Suite Construction.

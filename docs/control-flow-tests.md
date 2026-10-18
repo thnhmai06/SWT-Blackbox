@@ -2,8 +2,8 @@
 
 Systematic tests for `AtmService.Withdraw` and `QuadraticSolver.Solve`, derived from each method's control flow
 graph (CFG) rather than from arbitrary examples. Test code:
-`tests/SwtBlackbox.Atm.Tests/AtmControlFlowTests.cs`,
-`tests/SwtBlackbox.Quadratic.Tests/QuadraticControlFlowTests.cs`.
+`tests/SoftwareTesting.Atm.Tests/White/AtmControlFlowTests.cs`,
+`tests/SoftwareTesting.Quadratic.Tests/White/QuadraticControlFlowTests.cs`.
 
 Constants (from production code, not invented):
 
@@ -152,8 +152,8 @@ Collected with Coverlet through its native Microsoft.Testing.Platform integratio
 both test csprojs, opt-in via the `--coverlet` flag), Cobertura format, after a full green suite run:
 
 ```
-dotnet test tests/SwtBlackbox.Atm.Tests       -c Release --coverlet --coverlet-output-format cobertura --results-directory TestResults/Coverage/Atm
-dotnet test tests/SwtBlackbox.Quadratic.Tests -c Release --coverlet --coverlet-output-format cobertura --results-directory TestResults/Coverage/Quadratic
+dotnet test tests/SoftwareTesting.Atm.Tests       -c Release --coverlet --coverlet-output-format cobertura --results-directory TestResults/Coverage/Atm
+dotnet test tests/SoftwareTesting.Quadratic.Tests -c Release --coverlet --coverlet-output-format cobertura --results-directory TestResults/Coverage/Quadratic
 ```
 
 The VSTest-collector form (`coverlet.collector` + `--collect:"XPlat Code Coverage"`) does not work in this
@@ -200,7 +200,7 @@ the report cannot display them as branches. Tooling boundary, not a test gap.
 ### Uncovered branches in the reports (outside the methods under test)
 
 Report roots read ATM 19/19 lines, 16/18 branches (88.9%) and Quadratic 27/27 lines, 12/14 branches (85.7%).
-Both branch deficits are the same two conditions in shared test-support code `tests/SwtBlackbox.Tests/PaperLayers.cs`,
+Both branch deficits are the same two conditions in shared test-support code `tests/SoftwareTesting.Tests/PaperLayers.cs`,
 each at 50%; both target classes themselves are 100%:
 
 - Line 11, `Environment.GetEnvironmentVariable("SWT_LAYERS")?.Split(...)`: the runs leave `SWT_LAYERS`

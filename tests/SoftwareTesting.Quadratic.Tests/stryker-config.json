@@ -1,0 +1,18 @@
+{
+  "stryker-config": {
+    "project": "SoftwareTesting.Quadratic.csproj",
+    "test-runner": "mtp",
+    "disable-bail": true,
+    "additional-timeout": 60000,
+    "reporters": [
+      "progress",
+      "html",
+      "json"
+    ],
+    "thresholds": {
+      "high": 100,
+      "low": 90,
+      "break": 90
+    }
+  }
+}

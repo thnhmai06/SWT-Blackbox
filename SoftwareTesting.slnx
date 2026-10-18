@@ -1,0 +1,11 @@
+<Solution>
+    <Folder Name="/Sources/">
+        <Project Path="src/SoftwareTesting.Atm/SoftwareTesting.Atm.csproj"/>
+        <Project Path="src/SoftwareTesting.Quadratic/SoftwareTesting.Quadratic.csproj"/>
+    </Folder>
+    <Folder Name="/Tests/">
+        <Project Path="tests/SoftwareTesting.Atm.Tests/SoftwareTesting.Atm.Tests.csproj"/>
+        <Project Path="tests/SoftwareTesting.Quadratic.Tests/SoftwareTesting.Quadratic.Tests.csproj"/>
+        <Project Path="tests/SoftwareTesting.Tests/SoftwareTesting.Tests.csproj"/>
+    </Folder>
+</Solution>
